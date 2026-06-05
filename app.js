@@ -173,16 +173,21 @@ async function api(method, path, body = null) {
 async function fetchAndNormalizeJogos() {
   const jogos = await api("GET", "/jogos");
   const nameMap = {
+    "república da coreia": "Coreia do Sul",
     "coreia do sul": "Coreia do Sul",
-    "República da Coreia": "Coreia do Sul",
-    "Curaçau": "Curaçao",
-    "Rep. Democrática do Congo": "República Democrática do Congo"
+    "curaçau": "Curaçao",
+    "rep. democrática do congo": "República Democrática do Congo",
+    "república democrática do congo": "República Democrática do Congo"
   };
-  return Array.isArray(jogos) ? jogos.map(j => ({
-    ...j,
-    time_a: nameMap[j.time_a] || j.time_a,
-    time_b: nameMap[j.time_b] || j.time_b
-  })) : [];
+  return Array.isArray(jogos) ? jogos.map(j => {
+    const rawA = String(j.time_a || "").trim();
+    const rawB = String(j.time_b || "").trim();
+    return {
+      ...j,
+      time_a: nameMap[rawA.toLowerCase()] || rawA,
+      time_b: nameMap[rawB.toLowerCase()] || rawB
+    };
+  }) : [];
 }
  
 /* ── Toast ────────────────────────────────────────────────────────────────── */

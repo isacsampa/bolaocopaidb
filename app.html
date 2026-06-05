@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bolão Copa 2026 — App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app-screen" class="screen active">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar__brand">
+        <span class="topbar__trophy">🏆</span>
+        <span class="topbar__title">BOLÃO COPA 2026</span>
+      </div>
+      <div class="topbar__user">
+        <span id="user-greeting" class="user-greeting"></span>
+        <button id="btn-logout" class="btn-logout" title="Sair">↩ Sair</button>
+      </div>
+    </header>
+
+    <!-- Nav -->
+    <nav class="main-nav">
+      <button class="nav-btn active" data-section="jogos">
+        <span class="nav-icon">⚽</span>
+        <span>Meus Palpites</span>
+      </button>
+      <button class="nav-btn" data-section="grupos">
+        <span class="nav-icon">📊</span>
+        <span>Fase de Grupos</span>
+      </button>
+      <button class="nav-btn" data-section="matamata">
+        <span class="nav-icon">🏆</span>
+        <span>Mata-Mata</span>
+      </button>
+      <button class="nav-btn" data-section="ranking">
+        <span class="nav-icon">🥇</span>
+        <span>Ranking Geral</span>
+      </button>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+      <!-- ── Seção: Jogos ─────────────────────────────────────────────── -->
+      <section id="section-jogos" class="content-section active">
+        <div class="section-header">
+          <h2 class="section-title">Jogos & Palpites</h2>
+          <p class="section-desc">Insira seus palpites antes do início de cada jogo.</p>
+        </div>
+
+        <div class="section-controls">
+          <label for="group-filter">Filtrar por grupo:</label>
+          <select id="group-filter">
+            <option value="">Todos os grupos</option>
+            <option value="A">Grupo A</option>
+            <option value="B">Grupo B</option>
+            <option value="C">Grupo C</option>
+            <option value="D">Grupo D</option>
+            <option value="E">Grupo E</option>
+            <option value="F">Grupo F</option>
+            <option value="G">Grupo G</option>
+            <option value="H">Grupo H</option>
+            <option value="I">Grupo I</option>
+            <option value="J">Grupo J</option>
+            <option value="K">Grupo K</option>
+            <option value="L">Grupo L</option>
+          </select>
+        </div>
+
+        <div id="jogos-loading" class="loading-state">
+          <div class="spinner"></div>
+          <p>Carregando jogos…</p>
+        </div>
+
+        <div id="jogos-empty" class="empty-state" hidden>
+          <span class="empty-icon">📅</span>
+          <p>Nenhum jogo cadastrado ainda.</p>
+        </div>
+
+        <div id="jogos-list" class="jogos-grid" hidden></div>
+      </section>
+
+      <!-- ── Seção: Fase de Grupos ──────────────────────────────────────── -->
+      <section id="section-grupos" class="content-section">
+        <div class="section-header" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h2 class="section-title">Fase de Grupos</h2>
+            <p class="section-desc">Classificação em tempo real de acordo com sua simulação local.</p>
+          </div>
+          <button id="btn-reset-simulation" class="btn-secondary" style="margin-bottom: 0;">🧹 Limpar Simulação</button>
+        </div>
+        <div id="group-standings" class="group-standings"></div>
+      </section>
+ 
+      <!-- ── Seção: Mata-Mata ───────────────────────────────────────────── -->
+      <section id="section-matamata" class="content-section">
+        <div class="section-header" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h2 class="section-title">Simulador Mata-Mata</h2>
+            <p class="section-desc">Clique nos círculos para escolher quem avança até a final.</p>
+          </div>
+          <button id="btn-reset-bracket" class="btn-secondary" style="margin-bottom: 0;">🧹 Limpar Chaveamento</button>
+        </div>
+        <div id="knockout-card" class="knockout-card">
+          <div id="best-third-teams" class="best-third-teams"></div>
+          <div id="knockout-bracket" class="knockout-bracket"></div>
+        </div>
+      </section>
+
+      <!-- ── Seção: Ranking ──────────────────────────────────────────── -->
+      <section id="section-ranking" class="content-section">
+        <div class="section-header">
+          <h2 class="section-title">Ranking Geral</h2>
+          <p class="section-desc">Classificação atualizada dos participantes do bolão.</p>
+        </div>
+
+        <button id="btn-refresh-ranking" class="btn-secondary">↻ Atualizar</button>
+
+        <div id="ranking-loading" class="loading-state" hidden>
+          <div class="spinner"></div>
+          <p>Carregando ranking…</p>
+        </div>
+
+        <div id="ranking-empty" class="empty-state" hidden>
+          <span class="empty-icon">📊</span>
+          <p>Ainda não há pontuações registradas.</p>
+        </div>
+
+        <div id="ranking-podium" class="ranking-podium" hidden></div>
+
+        <div id="ranking-table-wrap" class="ranking-table-wrap" hidden>
+          <table class="ranking-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Participante</th>
+                <th>Pontos</th>
+              </tr>
+            </thead>
+            <tbody id="ranking-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Toast notifications -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

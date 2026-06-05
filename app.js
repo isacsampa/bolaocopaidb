@@ -1,0 +1,1563 @@
+/**
+ * BOLÃO COPA 2026 — Frontend (app.js) v3
+ */
+
+// URL base da API
+// - Se rodando localmente (Live Server no 8080/5500), aponta para localhost:3000
+// - Se no deploy unificado (backend servindo frontend), usa caminho relativo '/api'
+// - Se hospedar o frontend separado (ex: Vercel/GitHub Pages), altere para a URL pública do seu backend
+const API_BASE = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+  ? (window.location.port && window.location.port !== "3000" ? "http://localhost:3000/api" : "/api")
+  : (window.location.origin.includes("github.io") || window.location.origin.includes("vercel.app") || window.location.origin.includes("netlify.app")
+    ? "https://SEU-BACKEND-NO-RENDER.onrender.com/api" // <- Substitua pela URL do seu backend se hospedar separado!
+    : "/api");
+ 
+const state = {
+  token: null,
+  user: null,
+  palpites: {},
+  jogos: [],
+  selectedGroup: "",
+  bracketPalpites: {},
+  simulatedPalpites: {},
+  activeGroupRounds: {},
+};
+
+const GROUPS = {
+  A: ["México", "África do Sul", "Coreia do Sul", "República Tcheca"],
+  B: ["Canadá", "Bósnia e Herzegovina", "Catar", "Suíça"],
+  C: ["Brasil", "Marrocos", "Haiti", "Escócia"],
+  D: ["Estados Unidos", "Paraguai", "Austrália", "Turquia"],
+  E: ["Alemanha", "Curaçao", "Costa do Marfim", "Equador"],
+  F: ["Holanda", "Japão", "Suécia", "Tunísia"],
+  G: ["Bélgica", "Egito", "Irã", "Nova Zelândia"],
+  H: ["Espanha", "Cabo Verde", "Arábia Saudita", "Uruguai"],
+  I: ["França", "Senegal", "Iraque", "Noruega"],
+  J: ["Argentina", "Argélia", "Áustria", "Jordânia"],
+  K: ["Portugal", "República Democrática do Congo", "Uzbequistão", "Colômbia"],
+  L: ["Inglaterra", "Croácia", "Gana", "Panamá"],
+};
+
+const KNOCKOUT_ROUNDS = [
+  {
+    name: "Round of 32",
+    matches: [
+      { id: "r32-m1", left: "1C", right: "2F" },
+      { id: "r32-m2", left: "1E", right: "3ABCDF" },
+      { id: "r32-m3", left: "1F", right: "2C" },
+      { id: "r32-m4", left: "1I", right: "3CDFGH" },
+      { id: "r32-m5", left: "1A", right: "3CEFHI" },
+      { id: "r32-m6", left: "1L", right: "3EHIJK" },
+      { id: "r32-m7", left: "1G", right: "3AEHIJ" },
+      { id: "r32-m8", left: "1D", right: "3BEFIJ" },
+      { id: "r32-m9", left: "1H", right: "2J" },
+      { id: "r32-m10", left: "1B", right: "3EFGIJ" },
+      { id: "r32-m11", left: "1J", right: "2H" },
+      { id: "r32-m12", left: "1K", right: "3DEIJL" },
+      { id: "r32-m13", left: "2K", right: "2L" },
+      { id: "r32-m14", left: "2D", right: "2G" },
+      { id: "r32-m15", left: "2A", right: "2B" },
+      { id: "r32-m16", left: "2E", right: "2I" },
+    ],
+  },
+  {
+    name: "Round of 16",
+    matches: [
+      { id: "r16-m1", left: "W_r32-m1", right: "W_r32-m2" },
+      { id: "r16-m2", left: "W_r32-m3", right: "W_r32-m4" },
+      { id: "r16-m3", left: "W_r32-m5", right: "W_r32-m6" },
+      { id: "r16-m4", left: "W_r32-m7", right: "W_r32-m8" },
+      { id: "r16-m5", left: "W_r32-m9", right: "W_r32-m10" },
+      { id: "r16-m6", left: "W_r32-m11", right: "W_r32-m12" },
+      { id: "r16-m7", left: "W_r32-m13", right: "W_r32-m14" },
+      { id: "r16-m8", left: "W_r32-m15", right: "W_r32-m16" },
+    ],
+  },
+  {
+    name: "Quarterfinals",
+    matches: [
+      { id: "qf-m1", left: "W_r16-m1", right: "W_r16-m2" },
+      { id: "qf-m2", left: "W_r16-m3", right: "W_r16-m4" },
+      { id: "qf-m3", left: "W_r16-m5", right: "W_r16-m6" },
+      { id: "qf-m4", left: "W_r16-m7", right: "W_r16-m8" },
+    ],
+  },
+  {
+    name: "Semifinals",
+    matches: [
+      { id: "sf-m1", left: "W_qf-m1", right: "W_qf-m2" },
+      { id: "sf-m2", left: "W_qf-m3", right: "W_qf-m4" },
+    ],
+  },
+  {
+    name: "Final",
+    matches: [
+      { id: "f-m1", left: "W_sf-m1", right: "W_sf-m2" },
+    ],
+  },
+];
+ 
+/* ── Sessão ───────────────────────────────────────────────────────────────── */
+ 
+function saveSession(token, user) {
+  sessionStorage.setItem("bolao_token", token);
+  sessionStorage.setItem("bolao_user", JSON.stringify(user));
+}
+ 
+function loadSession() {
+  const token = sessionStorage.getItem("bolao_token");
+  const raw   = sessionStorage.getItem("bolao_user");
+  if (!token || !raw) return false;
+  try {
+    state.token = token;
+    state.user  = JSON.parse(raw);
+    return true;
+  } catch { return false; }
+}
+ 
+function clearSession() {
+  sessionStorage.removeItem("bolao_token");
+  sessionStorage.removeItem("bolao_user");
+  state.token = null; state.user = null;
+  state.palpites = {}; state.jogos = [];
+}
+function loadBracketSession() {
+  try {
+    const saved = localStorage.getItem("bolao_bracket");
+    state.bracketPalpites = saved ? JSON.parse(saved) : {};
+  } catch {
+    state.bracketPalpites = {};
+  }
+  try {
+    const savedGroups = localStorage.getItem("bolao_simulated_groups");
+    state.simulatedPalpites = savedGroups ? JSON.parse(savedGroups) : {};
+  } catch {
+    state.simulatedPalpites = {};
+  }
+}
+
+function saveBracketSession() {
+  try {
+    localStorage.setItem("bolao_bracket", JSON.stringify(state.bracketPalpites));
+  } catch {
+    // ignore storage errors
+  }
+} 
+
+function saveSimulatedGroups() {
+  try {
+    localStorage.setItem("bolao_simulated_groups", JSON.stringify(state.simulatedPalpites));
+  } catch {
+    // ignore storage errors
+  }
+}/* ── API ──────────────────────────────────────────────────────────────────── */
+ 
+async function api(method, path, body = null) {
+  const headers = { "Content-Type": "application/json" };
+  if (state.token) headers["Authorization"] = `Bearer ${state.token}`;
+  let res;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      method, headers,
+      body: body ? JSON.stringify(body) : null,
+    });
+  } catch {
+    throw new Error("Servidor offline. Verifique se o backend está rodando na porta 3000.");
+  }
+  let data = {};
+  try { data = await res.json(); } catch (_) {}
+  if (!res.ok) throw new Error(data.error || `Erro HTTP ${res.status}`);
+  return data;
+}
+
+async function fetchAndNormalizeJogos() {
+  const jogos = await api("GET", "/jogos");
+  const nameMap = {
+    "coreia do sul": "Coreia do Sul",
+    "República da Coreia": "Coreia do Sul",
+    "Curaçau": "Curaçao",
+    "Rep. Democrática do Congo": "República Democrática do Congo"
+  };
+  return Array.isArray(jogos) ? jogos.map(j => ({
+    ...j,
+    time_a: nameMap[j.time_a] || j.time_a,
+    time_b: nameMap[j.time_b] || j.time_b
+  })) : [];
+}
+ 
+/* ── Toast ────────────────────────────────────────────────────────────────── */
+ 
+function showToast(msg, type = "info", duration = 4000) {
+  const container = document.getElementById("toast-container");
+  const icons = { success: "✅", error: "❌", info: "ℹ️" };
+  const toast = document.createElement("div");
+  toast.className = `toast toast--${type}`;
+  toast.innerHTML = `<span class="toast__icon">${icons[type]||"ℹ️"}</span><span class="toast__msg">${msg}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add("fade-out");
+    toast.addEventListener("animationend", () => toast.remove(), { once: true });
+  }, duration);
+}
+ 
+/* ── UI helpers ───────────────────────────────────────────────────────────── */
+ 
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+ 
+function showSection(id) {
+  document.querySelectorAll(".content-section").forEach(s => s.classList.remove("active"));
+  document.getElementById(`section-${id}`).classList.add("active");
+  document.querySelectorAll(".nav-btn").forEach(b =>
+    b.classList.toggle("active", b.dataset.section === id)
+  );
+}
+ 
+function setLoading(btn, loading) {
+  const text = btn.querySelector(".btn-text");
+  const spin = btn.querySelector(".btn-spinner");
+  btn.disabled = loading;
+  if (text) text.hidden = loading;
+  if (spin) spin.hidden = !loading;
+}
+ 
+function setFormError(id, msg) {
+  const el = document.getElementById(`${id}-error`);
+  if (!el) return;
+  el.textContent = msg;
+  el.hidden = !msg;
+}
+ 
+function formatDate(iso) {
+  if (!iso) return "—";
+  try {
+    return new Intl.DateTimeFormat("pt-BR", {
+      day: "2-digit", month: "2-digit", year: "numeric",
+      hour: "2-digit", minute: "2-digit",
+      timeZone: "America/Sao_Paulo",
+    }).format(new Date(iso));
+  } catch { return iso; }
+}
+ 
+function getGameStatus(jogo) {
+  if (jogo.gols_a !== null && jogo.gols_b !== null) return "encerrado";
+  
+  // Prazo limite global do bolão
+  const deadlineStr = state.config?.global_deadline || "2026-06-11T16:00:00-03:00";
+  const globalDeadline = new Date(deadlineStr);
+  if (new Date() >= globalDeadline) return "encerrado";
+
+  if (new Date() >= new Date(jogo.data_hora)) return "em-andamento";
+  return "aberto";
+}
+
+function buildGroupStandings(groupCode) {
+  const teams = GROUPS[groupCode] || [];
+  const board = teams.map(nome => ({
+    nome,
+    jogos: 0,
+    vitorias: 0,
+    empates: 0,
+    derrotas: 0,
+    gols_pro: 0,
+    gols_contra: 0,
+    saldo: 0,
+    pontos: 0,
+  }));
+  const byName = Object.fromEntries(board.map(item => [item.nome, item]));
+
+  state.jogos.forEach(jogo => {
+    const isGroupMatch = teams.includes(jogo.time_a) && teams.includes(jogo.time_b);
+    if (!isGroupMatch) return;
+
+    // Use simulated results if official result is not available
+    let gols_a = jogo.gols_a;
+    let gols_b = jogo.gols_b;
+    if (gols_a === null || gols_b === null) {
+      const sim = state.simulatedPalpites[jogo.id];
+      if (sim) {
+        gols_a = sim.gols_a;
+        gols_b = sim.gols_b;
+      }
+    }
+
+    if (gols_a === null || gols_b === null) return;
+
+    const home = byName[jogo.time_a];
+    const away = byName[jogo.time_b];
+    if (!home || !away) return;
+
+    home.jogos += 1;
+    away.jogos += 1;
+    home.gols_pro += gols_a;
+    home.gols_contra += gols_b;
+    away.gols_pro += gols_b;
+    away.gols_contra += gols_a;
+
+    if (gols_a > gols_b) {
+      home.vitorias += 1;
+      away.derrotas += 1;
+      home.pontos += 3;
+    } else if (gols_a < gols_b) {
+      away.vitorias += 1;
+      home.derrotas += 1;
+      away.pontos += 3;
+    } else {
+      home.empates += 1;
+      away.empates += 1;
+      home.pontos += 1;
+      away.pontos += 1;
+    }
+  });
+
+  board.forEach(item => {
+    item.saldo = item.gols_pro - item.gols_contra;
+  });
+
+  return board.sort((a, b) => {
+    if (b.pontos !== a.pontos) return b.pontos - a.pontos;
+    if (b.saldo !== a.saldo) return b.saldo - a.saldo;
+    if (b.gols_pro !== a.gols_pro) return b.gols_pro - a.gols_pro;
+    if (a.gols_contra !== b.gols_contra) return a.gols_contra - b.gols_contra;
+    return a.nome.localeCompare(b.nome, "pt-BR");
+  });
+}
+
+function formatDateShort(iso) {
+  if (!iso) return "";
+  try {
+    return new Intl.DateTimeFormat("pt-BR", {
+      day: "2-digit", month: "2-digit",
+      hour: "2-digit", minute: "2-digit",
+      timeZone: "America/Sao_Paulo",
+    }).format(new Date(iso));
+  } catch { return ""; }
+}
+
+
+
+function handleGroupGameAutoSave(jogoId) {
+  const inputA = document.getElementById(`group-gols-a-${jogoId}`);
+  const inputB = document.getElementById(`group-gols-b-${jogoId}`);
+  
+  if (!inputA || !inputB) return;
+  
+  if (inputA.value === "" || inputB.value === "") {
+    if (state.simulatedPalpites[jogoId]) {
+      delete state.simulatedPalpites[jogoId];
+      saveSimulatedGroups();
+      renderGroupStandings();
+    }
+    return;
+  }
+  
+  const gols_a = parseInt(inputA.value, 10);
+  const gols_b = parseInt(inputB.value, 10);
+  
+  if (isNaN(gols_a) || isNaN(gols_b) || gols_a < 0 || gols_b < 0) {
+    return;
+  }
+  
+  state.simulatedPalpites[jogoId] = { gols_a, gols_b };
+  saveSimulatedGroups();
+  renderGroupStandings();
+}
+
+function renderGroupStandings() {
+  const container = document.getElementById("group-standings");
+  if (!container) return;
+
+  container.innerHTML = Object.keys(GROUPS).map(code => {
+    const board = buildGroupStandings(code);
+    const rows = board.map((team, index) => `
+      <tr>
+        <td>${index + 1}</td>
+        <td class="team-name-cell">${esc(team.nome)}</td>
+        <td class="pts-cell">${team.pontos}</td>
+        <td>${team.jogos}</td>
+        <td>${team.vitorias}</td>
+        <td>${team.empates}</td>
+        <td>${team.derrotas}</td>
+        <td>${team.gols_pro}</td>
+        <td>${team.gols_contra}</td>
+        <td class="saldo-cell">${team.saldo > 0 ? "+" + team.saldo : team.saldo}</td>
+      </tr>
+    `).join("");
+
+    const activeRound = state.activeGroupRounds[code] || 1;
+
+    // Group matches and sort chronologically
+    const groupMatches = state.jogos
+      .filter(jogo => GROUPS[code].includes(jogo.time_a) && GROUPS[code].includes(jogo.time_b))
+      .sort((a, b) => new Date(a.data_hora) - new Date(b.data_hora));
+
+    const matchesHtml = groupMatches.map((jogo, index) => {
+      const status = getGameStatus(jogo);
+      const sim = state.simulatedPalpites[jogo.id];
+      const locked = status !== "aberto";
+      const valA = sim != null ? sim.gols_a : "";
+      const valB = sim != null ? sim.gols_b : "";
+      
+      const round = Math.floor(index / 2) + 1;
+      
+      return `
+        <div class="group-match-row round-${round} ${status}">
+          <span class="group-match-date">${formatDateShort(jogo.data_hora)}</span>
+          <div class="group-match-teams">
+            <span class="team-lbl right-align">${esc(jogo.time_a)}</span>
+            <input type="number" min="0" max="99" class="group-score-input"
+              id="group-gols-a-${jogo.id}" data-jogo-id="${jogo.id}" value="${valA}" placeholder="0"
+              ${locked ? "disabled" : ""} />
+            <span class="vs">x</span>
+            <input type="number" min="0" max="99" class="group-score-input"
+              id="group-gols-b-${jogo.id}" data-jogo-id="${jogo.id}" value="${valB}" placeholder="0"
+              ${locked ? "disabled" : ""} />
+            <span class="team-lbl left-align">${esc(jogo.time_b)}</span>
+          </div>
+          ${locked ? `<span class="locked-icon" title="Jogo encerrado ou em andamento">🔒</span>` : ""}
+        </div>
+      `;
+    }).join("");
+
+    const buttonsHtml = `
+      <div class="group-round-selector">
+        <button type="button" class="group-round-btn ${activeRound === 1 ? 'active' : ''}" data-group="${code}" data-round="1">1ª</button>
+        <button type="button" class="group-round-btn ${activeRound === 2 ? 'active' : ''}" data-group="${code}" data-round="2">2ª</button>
+        <button type="button" class="group-round-btn ${activeRound === 3 ? 'active' : ''}" data-group="${code}" data-round="3">3ª</button>
+      </div>
+    `;
+
+    return `
+      <div class="group-standings-card">
+        <div class="group-standings-header">
+          <h3>Grupo ${code}</h3>
+        </div>
+        <div class="group-standings-table-wrap">
+          <table class="group-standings-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Time</th>
+                <th>P</th>
+                <th>J</th>
+                <th>V</th>
+                <th>E</th>
+                <th>D</th>
+                <th>GP</th>
+                <th>GC</th>
+                <th>SG</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+        <div class="group-card-matches">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
+            <h4 style="margin: 0;">Jogos</h4>
+            ${buttonsHtml}
+          </div>
+          <div class="group-matches-list" id="matches-list-${code}" data-active-round="${activeRound}">${matchesHtml}</div>
+        </div>
+      </div>`;
+  }).join("");
+
+  container.querySelectorAll(".group-score-input").forEach(input => {
+    input.addEventListener("change", () => handleGroupGameAutoSave(Number(input.dataset.jogoId)));
+  });
+
+  container.querySelectorAll(".group-round-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const groupCode = btn.dataset.group;
+      const round = Number(btn.dataset.round);
+      state.activeGroupRounds[groupCode] = round;
+      
+      const parent = btn.closest(".group-card-matches");
+      if (parent) {
+        parent.querySelectorAll(".group-round-btn").forEach(b => b.classList.toggle("active", b === btn));
+        const list = parent.querySelector(".group-matches-list");
+        if (list) {
+          list.dataset.activeRound = round;
+        }
+      }
+    });
+  });
+}
+
+async function loadGroupStandings() {
+  const container = document.getElementById("group-standings");
+  if (container && (!state.jogos || state.jogos.length === 0)) {
+    container.innerHTML = `
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Carregando classificação...</p>
+      </div>`;
+  }
+  
+  try {
+    await fetchConfig();
+    if (!state.jogos || state.jogos.length === 0) {
+      state.jogos = await fetchAndNormalizeJogos();
+    }
+    renderGroupStandings();
+  } catch (err) {
+    if (container) {
+      container.innerHTML = `<p class="form-error">Erro ao carregar classificação: ${err.message}</p>`;
+    }
+  }
+}
+
+function getFilteredJogos() {
+  if (!state.selectedGroup || !GROUPS[state.selectedGroup]) return state.jogos;
+  const grupoTimes = GROUPS[state.selectedGroup];
+  return state.jogos.filter(jogo =>
+    grupoTimes.includes(jogo.time_a) || grupoTimes.includes(jogo.time_b)
+  );
+}
+
+async function fetchConfig() {
+  if (state.config && Object.keys(state.config).length > 0) return;
+  try {
+    state.config = await api("GET", "/config");
+  } catch (err) {
+    state.config = { global_deadline: "2026-06-11T16:00:00-03:00" };
+  }
+}
+
+function updateDeadlineBanner() {
+  const banner = document.getElementById("deadline-banner");
+  if (!banner) return;
+  
+  const deadlineStr = state.config?.global_deadline || "2026-06-11T16:00:00-03:00";
+  const deadline = new Date(deadlineStr);
+  const agora = new Date();
+  
+  const formattedDate = deadline.toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "America/Sao_Paulo"
+  });
+
+  if (agora >= deadline) {
+    banner.className = "deadline-banner locked";
+    banner.innerHTML = `<span>🔒</span> <strong>Palpites encerrados!</strong> O prazo limite para todas as apostas expirou em ${formattedDate}.`;
+    banner.hidden = false;
+  } else {
+    banner.className = "deadline-banner pending";
+    banner.innerHTML = `<span>⏰</span> <strong>Prazo limite:</strong> Envie ou edite seus palpites até dia ${formattedDate}.`;
+    banner.hidden = false;
+  }
+}
+
+function updateJogosDisplay() {
+  updateDeadlineBanner();
+  const listEl  = document.getElementById("jogos-list");
+  const emptyEl = document.getElementById("jogos-empty");
+  const emptyText = emptyEl.querySelector("p");
+  const jogos = getFilteredJogos();
+
+  if (jogos.length === 0) {
+    emptyText.textContent = state.selectedGroup
+      ? `Nenhum jogo encontrado para o Grupo ${state.selectedGroup}.`
+      : "Nenhum jogo cadastrado ainda.";
+    listEl.innerHTML = "";
+    listEl.hidden = true;
+    emptyEl.hidden = false;
+    return;
+  }
+
+  emptyText.textContent = "Nenhum jogo cadastrado ainda.";
+  emptyEl.hidden = true;
+  listEl.innerHTML = jogos.map(renderJogoCard).join("");
+  listEl.hidden = false;
+  listEl.querySelectorAll(".score-input").forEach(input => {
+    input.addEventListener("change", () => handleJogosAutoSave(Number(input.dataset.jogoId)));
+  });
+  loadGroupStandings();
+}
+
+function esc(str) {
+  return String(str || "")
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+
+function isGroupSimulatedOrPlayed(groupCode) {
+  if (!state.jogos || state.jogos.length === 0) return false;
+  const teams = GROUPS[groupCode] || [];
+  return state.jogos.some(jogo => {
+    const isGroupMatch = teams.includes(jogo.time_a) && teams.includes(jogo.time_b);
+    if (!isGroupMatch) return false;
+    const hasOfficial = jogo.gols_a !== null && jogo.gols_b !== null;
+    const hasSimulated = state.simulatedPalpites && state.simulatedPalpites[jogo.id] != null;
+    return hasOfficial || hasSimulated;
+  });
+}
+
+function getGroupRankings() {
+  return Object.fromEntries(Object.keys(GROUPS).map(code => [code, buildGroupStandings(code)]));
+}
+
+function sortQualificationTeams(left, right) {
+  if (right.pontos !== left.pontos) return right.pontos - left.pontos;
+  if (right.saldo !== left.saldo) return right.saldo - left.saldo;
+  if (right.gols_pro !== left.gols_pro) return right.gols_pro - left.gols_pro;
+  if (left.gols_contra !== right.gols_contra) return left.gols_contra - right.gols_contra;
+  return left.nome.localeCompare(right.nome, "pt-BR");
+}
+
+function getBestThirdTeams() {
+  const groupRankings = getGroupRankings();
+  const thirds = Object.entries(groupRankings)
+    .map(([code, board]) => ({
+      group: code,
+      team: isGroupSimulatedOrPlayed(code) ? board[2] : null,
+    }))
+    .filter(item => item.team && item.team.nome);
+
+  return thirds.sort((a, b) => sortQualificationTeams(a.team, b.team)).slice(0, 8);
+}
+
+function computeThirdPlaceAssignments() {
+  state.thirdPlaceAssignments = {};
+  
+  const groupRankings = getGroupRankings();
+  const thirds = Object.entries(groupRankings)
+    .map(([code, board]) => ({
+      group: code,
+      team: isGroupSimulatedOrPlayed(code) ? board[2] : null,
+    }))
+    .filter(item => item.team && item.team.nome)
+    .map(item => ({
+      group: item.group,
+      teamName: item.team.nome,
+      pontos: item.team.pontos,
+      saldo: item.team.saldo,
+      gols_pro: item.team.gols_pro,
+      gols_contra: item.team.gols_contra,
+      nome: item.team.nome
+    }));
+
+  thirds.sort(sortQualificationTeams);
+  const qualifyingThirds = thirds.slice(0, 8);
+
+  const slots = [
+    { id: "3ABCDF", groups: ["A", "B", "C", "D", "F"] },
+    { id: "3CDFGH", groups: ["C", "D", "F", "G", "H"] },
+    { id: "3CEFHI", groups: ["C", "E", "F", "H", "I"] },
+    { id: "3EHIJK", groups: ["E", "H", "I", "J", "K"] },
+    { id: "3AEHIJ", groups: ["A", "E", "H", "I", "J"] },
+    { id: "3BEFIJ", groups: ["B", "E", "F", "I", "J"] },
+    { id: "3EFGIJ", groups: ["E", "F", "G", "I", "J"] },
+    { id: "3DEIJL", groups: ["D", "E", "I", "J", "L"] }
+  ];
+
+  let bestAssignment = {};
+  let maxMatched = -1;
+
+  function backtrack(slotIndex, currentAssignment, assignedGroups, matchedCount) {
+    if (slotIndex === slots.length) {
+      if (matchedCount > maxMatched) {
+        maxMatched = matchedCount;
+        bestAssignment = { ...currentAssignment };
+      }
+      return;
+    }
+
+    const slot = slots[slotIndex];
+
+    for (let i = 0; i < qualifyingThirds.length; i++) {
+      const t = qualifyingThirds[i];
+      if (assignedGroups.has(t.group)) continue;
+      if (slot.groups.includes(t.group)) {
+        assignedGroups.add(t.group);
+        currentAssignment[slot.id] = t.teamName;
+        backtrack(slotIndex + 1, currentAssignment, assignedGroups, matchedCount + 1);
+        assignedGroups.delete(t.group);
+        delete currentAssignment[slot.id];
+      }
+    }
+
+    currentAssignment[slot.id] = null;
+    backtrack(slotIndex + 1, currentAssignment, assignedGroups, matchedCount);
+    delete currentAssignment[slot.id];
+  }
+
+  backtrack(0, {}, new Set(), 0);
+  state.thirdPlaceAssignments = bestAssignment;
+}
+
+function resolveQualification(slot) {
+  if (!slot) return "—";
+  if (/^[12][A-L]$/.test(slot)) {
+    const position = Number(slot[0]);
+    const group = slot[1];
+    if (!isGroupSimulatedOrPlayed(group)) {
+      return `${position}º Grupo ${group}`;
+    }
+    const board = buildGroupStandings(group);
+    const team = board[position - 1];
+    return team ? team.nome : `${position}º Grupo ${group}`;
+  }
+
+  if (/^3[A-L]{2,6}$/.test(slot)) {
+    if (state.thirdPlaceAssignments && state.thirdPlaceAssignments[slot]) {
+      return state.thirdPlaceAssignments[slot];
+    }
+    const groups = slot.slice(1).split("");
+    return `3º melhor (${groups.join("/ ")})`;
+  }
+
+  if (/^W_/.test(slot)) {
+    const winner = getKnockoutMatchWinner(slot.slice(2));
+    return winner || `Vencedor ${slot.slice(2)}`;
+  }
+
+  if (/^L_/.test(slot)) {
+    const loser = getKnockoutMatchLoser(slot.slice(2));
+    return loser || `Perdedor ${slot.slice(2)}`;
+  }
+
+  return slot;
+}
+
+function getBracketLabel(source) {
+  if (!source) return "—";
+  return resolveQualification(source);
+}
+
+function formatSlotLabel(slot) {
+  if (!slot) return "—";
+  if (/^([12])([A-L])$/.test(slot)) {
+    const position = Number(RegExp.$1);
+    const group = RegExp.$2;
+    return `${position}º${group}`;
+  }
+  if (/^3[A-L]{2,6}$/.test(slot)) {
+    return "3ºs";
+  }
+  if (/^W_/.test(slot)) {
+    return "Vencedor";
+  }
+  if (/^L_/.test(slot)) {
+    return "Perdedor";
+  }
+  return slot;
+}
+
+function renderBestThirdTeams() {
+  const container = document.getElementById("best-third-teams");
+  if (!container) return;
+  const bestThirds = getBestThirdTeams();
+
+  if (bestThirds.length === 0) {
+    container.innerHTML = `
+      <div class="best-third-note">
+        <strong>Ranking dos 8 melhores 3ºs:</strong> aguarde resultados dos grupos para preencher.
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="best-third-note">
+      <strong>Melhores 3ºs (top 8):</strong>
+      ${bestThirds.map(item => `${esc(item.group)}: ${esc(item.team.nome)} (${item.team.pontos} pts, SG ${item.team.saldo})`).join(" • ")}
+    </div>`;
+}
+
+function getBracketHalves() {
+  const round32 = KNOCKOUT_ROUNDS[0].matches;
+  const round16 = KNOCKOUT_ROUNDS[1].matches;
+  const quarters = KNOCKOUT_ROUNDS[2].matches;
+  const semis = KNOCKOUT_ROUNDS[3].matches;
+  return {
+    left32: round32.slice(0, 8),
+    right32: round32.slice(8),
+    left16: round16.slice(0, 4),
+    right16: round16.slice(4),
+    leftQuarters: quarters.slice(0, 2),
+    rightQuarters: quarters.slice(2),
+    leftSemis: [semis[0]],
+    rightSemis: [semis[1]],
+  };
+}
+
+function getDisplayName(slot) {
+  const resolved = getBracketLabel(slot);
+  if (resolved.includes("Grupo") || resolved.includes("melhor") || resolved.includes("Vencedor") || resolved.includes("Perdedor")) {
+    return formatSlotLabel(slot);
+  }
+  return resolved;
+}
+
+function renderBracketMatch(match, alignment) {
+  const palpite = state.bracketPalpites[match.id] || {};
+  const leftText = getDisplayName(match.left);
+  const rightText = getDisplayName(match.right);
+  const leftSelected = palpite.picked === "left";
+  const rightSelected = palpite.picked === "right";
+
+  const renderTeam = (teamText, side, isRightSide) => {
+    const circleHtml = `<button type="button" class="bracket-team-circle ${side === "left" ? (leftSelected ? "selected" : "") : (rightSelected ? "selected" : "")}" id="circle-${match.id}-${side}" data-match="${match.id}" data-side="${side}" title="${esc(teamText)}"></button>`;
+    const labelHtml = `<span class="bracket-team-label ${side === "left" ? (leftSelected ? "active" : "") : (rightSelected ? "active" : "")}">${esc(teamText)}</span>`;
+    
+    return isRightSide 
+      ? `<div class="bracket-team right-align">${circleHtml}${labelHtml}</div>`
+      : `<div class="bracket-team left-align">${labelHtml}${circleHtml}</div>`;
+  };
+
+  const isRight = alignment.startsWith("right");
+  return `
+    <div class="bracket-match-pair" data-match="${match.id}">
+      ${renderTeam(leftText, "left", isRight)}
+      ${renderTeam(rightText, "right", isRight)}
+    </div>`;
+}
+
+function renderKnockoutBracket() {
+  const container = document.getElementById("knockout-bracket");
+  if (!container) return;
+
+  const {
+    left32, right32,
+    left16, right16,
+    leftQuarters, rightQuarters,
+    leftSemis, rightSemis
+  } = getBracketHalves();
+  
+  const finalMatch = KNOCKOUT_ROUNDS[4].matches[0];
+  const finalPalpite = state.bracketPalpites[finalMatch.id] || {};
+  const finalLeftText = getDisplayName(finalMatch.left);
+  const finalRightText = getDisplayName(finalMatch.right);
+  const finalLeftSelected = finalPalpite.picked === "left";
+  const finalRightSelected = finalPalpite.picked === "right";
+  
+  const championName = getKnockoutMatchWinner(finalMatch.id);
+  const hasChampion = !!championName;
+  const championText = hasChampion ? championName : "Escolha o Campeão";
+
+  const html = `
+    <div class="bracket-grid">
+      <!-- Canvas SVG para conexões -->
+      <svg id="bracket-svg" class="bracket-svg"></svg>
+
+      <!-- Coluna 1: 16-avos Esquerda -->
+      <div class="bracket-column bracket-column-left-32">
+        <div class="bracket-column-title">16-avos</div>
+        ${left32.map(match => renderBracketMatch(match, "left-32")).join("")}
+      </div>
+
+      <!-- Coluna 2: Oitavas Esquerda -->
+      <div class="bracket-column bracket-column-left-16">
+        <div class="bracket-column-title">Oitavas</div>
+        ${left16.map(match => renderBracketMatch(match, "left-16")).join("")}
+      </div>
+
+      <!-- Coluna 3: Quartas Esquerda -->
+      <div class="bracket-column bracket-column-left-qf">
+        <div class="bracket-column-title">Quartas</div>
+        ${leftQuarters.map(match => renderBracketMatch(match, "left-qf")).join("")}
+      </div>
+
+      <!-- Coluna 4: Semifinal Esquerda -->
+      <div class="bracket-column bracket-column-left-sf">
+        <div class="bracket-column-title">Semifinal</div>
+        ${leftSemis.map(match => renderBracketMatch(match, "left-sf")).join("")}
+      </div>
+
+      <!-- Coluna 5: Centro (Final & Troféu) -->
+      <div class="bracket-column-center">
+        <div class="bracket-center-instruction">
+          Clique nos vencedores<br>de cada confronto, para fazer a sua simulação.
+        </div>
+        
+        <div class="bracket-final-wrap">
+          <!-- Finalista Esquerdo -->
+          <div class="bracket-team left-align">
+            <span class="bracket-team-label ${finalLeftSelected ? "active" : ""}">${esc(finalLeftText)}</span>
+            <button type="button" class="bracket-team-circle ${finalLeftSelected ? "selected" : ""}" id="circle-${finalMatch.id}-left" data-match="${finalMatch.id}" data-side="left" title="${esc(finalLeftText)}"></button>
+          </div>
+          
+          <!-- Troféu Central -->
+          <div class="bracket-trophy-container">
+            <div class="bracket-trophy-circle ${hasChampion ? "has-champion" : ""}" id="circle-champion" title="${hasChampion ? 'Campeão: ' + championName : 'Campeão'}">
+              🏆
+            </div>
+            <div class="bracket-champion-label ${hasChampion ? "active" : ""}">${esc(championText)}</div>
+            <div class="bracket-ge-logo">ge</div>
+          </div>
+          
+          <!-- Finalista Direito -->
+          <div class="bracket-team right-align">
+            <button type="button" class="bracket-team-circle ${finalRightSelected ? "selected" : ""}" id="circle-${finalMatch.id}-right" data-match="${finalMatch.id}" data-side="right" title="${esc(finalRightText)}"></button>
+            <span class="bracket-team-label ${finalRightSelected ? "active" : ""}">${esc(finalRightText)}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Coluna 6: Semifinal Direita -->
+      <div class="bracket-column bracket-column-right-sf">
+        <div class="bracket-column-title">Semifinal</div>
+        ${rightSemis.map(match => renderBracketMatch(match, "right-sf")).join("")}
+      </div>
+
+      <!-- Coluna 7: Quartas Direita -->
+      <div class="bracket-column bracket-column-right-qf">
+        <div class="bracket-column-title">Quartas</div>
+        ${rightQuarters.map(match => renderBracketMatch(match, "right-qf")).join("")}
+      </div>
+
+      <!-- Coluna 8: Oitavas Direita -->
+      <div class="bracket-column bracket-column-right-16">
+        <div class="bracket-column-title">Oitavas</div>
+        ${right16.map(match => renderBracketMatch(match, "right-16")).join("")}
+      </div>
+
+      <!-- Coluna 9: 16-avos Direita -->
+      <div class="bracket-column bracket-column-right-32">
+        <div class="bracket-column-title">16-avos</div>
+        ${right32.map(match => renderBracketMatch(match, "right-32")).join("")}
+      </div>
+    </div>`;
+
+  container.innerHTML = html;
+
+  container.querySelectorAll(".bracket-team-circle").forEach(button => {
+    button.addEventListener("click", (event) => {
+      const target = event.currentTarget;
+      const matchId = target.dataset.match;
+      const side = target.dataset.side;
+      pickBracketWinner(matchId, side);
+    });
+  });
+
+  setTimeout(drawBracketLines, 50);
+}
+
+function drawBracketLines() {
+  const svg = document.getElementById("bracket-svg");
+  if (!svg) return;
+  svg.innerHTML = "";
+
+  const svgRect = svg.getBoundingClientRect();
+  if (svgRect.width === 0 || svgRect.height === 0) return;
+
+  const circleRadius = 14;
+
+  function getCircleCenter(id) {
+    const el = document.getElementById(id);
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    return {
+      x: r.left - svgRect.left + r.width / 2,
+      y: r.top - svgRect.top + r.height / 2
+    };
+  }
+
+  const connections = [
+    // 16-avos para Oitavas (Esquerda)
+    { src: "r32-m1", dest: "circle-r16-m1-left" },
+    { src: "r32-m2", dest: "circle-r16-m1-right" },
+    { src: "r32-m3", dest: "circle-r16-m2-left" },
+    { src: "r32-m4", dest: "circle-r16-m2-right" },
+    { src: "r32-m5", dest: "circle-r16-m3-left" },
+    { src: "r32-m6", dest: "circle-r16-m3-right" },
+    { src: "r32-m7", dest: "circle-r16-m4-left" },
+    { src: "r32-m8", dest: "circle-r16-m4-right" },
+
+    // 16-avos para Oitavas (Direita)
+    { src: "r32-m9", dest: "circle-r16-m5-left" },
+    { src: "r32-m10", dest: "circle-r16-m5-right" },
+    { src: "r32-m11", dest: "circle-r16-m6-left" },
+    { src: "r32-m12", dest: "circle-r16-m6-right" },
+    { src: "r32-m13", dest: "circle-r16-m7-left" },
+    { src: "r32-m14", dest: "circle-r16-m7-right" },
+    { src: "r32-m15", dest: "circle-r16-m8-left" },
+    { src: "r32-m16", dest: "circle-r16-m8-right" },
+
+    // Oitavas para Quartas (Esquerda)
+    { src: "r16-m1", dest: "circle-qf-m1-left" },
+    { src: "r16-m2", dest: "circle-qf-m1-right" },
+    { src: "r16-m3", dest: "circle-qf-m2-left" },
+    { src: "r16-m4", dest: "circle-qf-m2-right" },
+
+    // Oitavas para Quartas (Direita)
+    { src: "r16-m5", dest: "circle-qf-m3-left" },
+    { src: "r16-m6", dest: "circle-qf-m3-right" },
+    { src: "r16-m7", dest: "circle-qf-m4-left" },
+    { src: "r16-m8", dest: "circle-qf-m4-right" },
+
+    // Quartas para Semifinais (Esquerda)
+    { src: "qf-m1", dest: "circle-sf-m1-left" },
+    { src: "qf-m2", dest: "circle-sf-m1-right" },
+
+    // Quartas para Semifinais (Direita)
+    { src: "qf-m3", dest: "circle-sf-m2-left" },
+    { src: "qf-m4", dest: "circle-sf-m2-right" },
+
+    // Semifinais para Final
+    { src: "sf-m1", dest: "circle-f-m1-left" },
+    { src: "sf-m2", dest: "circle-f-m1-right" },
+
+    // Final para o Campeão
+    { src: "f-m1", dest: "circle-champion" }
+  ];
+
+  connections.forEach(({ src, dest }) => {
+    const cDest = getCircleCenter(dest);
+    if (!cDest) return;
+
+    if (src === "f-m1") {
+      const cLeft = getCircleCenter("circle-f-m1-left");
+      const cRight = getCircleCenter("circle-f-m1-right");
+      const palpite = state.bracketPalpites["f-m1"] || {};
+      const leftSelected = palpite.picked === "left";
+      const rightSelected = palpite.picked === "right";
+
+      if (cLeft) {
+        const pathL = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        pathL.setAttribute("d", `M ${cLeft.x + circleRadius} ${cLeft.y} H ${cDest.x - 38}`);
+        pathL.setAttribute("class", `bracket-svg-path ${leftSelected ? "active" : ""}`);
+        svg.appendChild(pathL);
+      }
+      if (cRight) {
+        const pathR = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        pathR.setAttribute("d", `M ${cRight.x - circleRadius} ${cRight.y} H ${cDest.x + 38}`);
+        pathR.setAttribute("class", `bracket-svg-path ${rightSelected ? "active" : ""}`);
+        svg.appendChild(pathR);
+      }
+      return;
+    }
+
+    const cSrcLeft = getCircleCenter(`circle-${src}-left`);
+    const cSrcRight = getCircleCenter(`circle-${src}-right`);
+    if (!cSrcLeft || !cSrcRight) return;
+
+    const isLeftToRight = cDest.x > cSrcLeft.x;
+    const xs = isLeftToRight ? cSrcLeft.x + circleRadius : cSrcLeft.x - circleRadius;
+    const xd = isLeftToRight ? cDest.x - circleRadius : cDest.x + circleRadius;
+    
+    const offset = isLeftToRight ? 18 : -18;
+    const xm = xs + offset;
+
+    const palpite = state.bracketPalpites[src] || {};
+    const pickedA = palpite.picked === "left";
+    const pickedB = palpite.picked === "right";
+    const hasWinner = pickedA || pickedB;
+
+    const pathA = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    pathA.setAttribute("d", `M ${xs} ${cSrcLeft.y} H ${xm} V ${cDest.y}`);
+    pathA.setAttribute("class", `bracket-svg-path ${pickedA ? "active" : ""}`);
+    svg.appendChild(pathA);
+
+    const pathB = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    pathB.setAttribute("d", `M ${xs} ${cSrcRight.y} H ${xm} V ${cDest.y}`);
+    pathB.setAttribute("class", `bracket-svg-path ${pickedB ? "active" : ""}`);
+    svg.appendChild(pathB);
+
+    const pathC = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    pathC.setAttribute("d", `M ${xm} ${cDest.y} H ${xd}`);
+    pathC.setAttribute("class", `bracket-svg-path ${hasWinner ? "active" : ""}`);
+    svg.appendChild(pathC);
+  });
+}
+
+function getKnockoutMatchById(matchId) {
+  return KNOCKOUT_ROUNDS.flatMap(round => round.matches).find(match => match.id === matchId);
+}
+
+function pickBracketWinner(matchId, side) {
+  const match = getKnockoutMatchById(matchId);
+  if (!match) return;
+
+  state.bracketPalpites[matchId] = {
+    left: match.left,
+    right: match.right,
+    picked: side,
+  };
+  saveBracketSession();
+  renderKnockoutBracket();
+}
+
+function getKnockoutMatchWinner(matchId) {
+  const palpite = state.bracketPalpites[matchId];
+  if (palpite && palpite.picked) {
+    return resolveQualification(palpite[palpite.picked]);
+  }
+  if (!palpite || palpite.scoreA == null || palpite.scoreB == null) return null;
+  if (palpite.scoreA > palpite.scoreB) return resolveQualification(palpite.left);
+  if (palpite.scoreB > palpite.scoreA) return resolveQualification(palpite.right);
+  return null;
+}
+
+function getKnockoutMatchLoser(matchId) {
+  const palpite = state.bracketPalpites[matchId];
+  if (palpite && palpite.picked) {
+    const loserSide = palpite.picked === "left" ? "right" : "left";
+    return resolveQualification(palpite[loserSide]);
+  }
+  if (!palpite || palpite.scoreA == null || palpite.scoreB == null) return null;
+  if (palpite.scoreA > palpite.scoreB) return resolveQualification(palpite.right);
+  if (palpite.scoreB > palpite.scoreA) return resolveQualification(palpite.left);
+  return null;
+}
+
+async function loadKnockoutBracket() {
+  const container = document.getElementById("knockout-bracket");
+  if (container && (!state.jogos || state.jogos.length === 0)) {
+    container.innerHTML = `
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Carregando chaveamento...</p>
+      </div>`;
+  }
+  
+  try {
+    await fetchConfig();
+    if (!state.jogos || state.jogos.length === 0) {
+      state.jogos = await fetchAndNormalizeJogos();
+    }
+    
+    computeThirdPlaceAssignments();
+    renderBestThirdTeams();
+    renderKnockoutBracket();
+  } catch (err) {
+    showToast("Erro ao carregar chaveamento: " + err.message, "error");
+  }
+}
+ 
+/* ── Auth ─────────────────────────────────────────────────────────────────── */
+ 
+async function handleLogin(e) {
+  e.preventDefault();
+  setFormError("login", "");
+  const email = document.getElementById("login-email").value.trim();
+  const senha = document.getElementById("login-senha").value;
+  const btn   = document.getElementById("btn-login");
+  if (!email || !senha) { setFormError("login", "Preencha todos os campos."); return; }
+  setLoading(btn, true);
+  try {
+    const data  = await api("POST", "/auth/login", { email, senha });
+    state.token = data.session?.access_token;
+    state.user  = data.user;
+    saveSession(state.token, state.user);
+    window.location.href = "app.html";
+  } catch (err) {
+    setFormError("login", err.message);
+  } finally { setLoading(btn, false); }
+}
+ 
+async function handleSignup(e) {
+  e.preventDefault();
+  setFormError("signup", "");
+  const nome  = document.getElementById("signup-nome").value.trim();
+  const email = document.getElementById("signup-email").value.trim();
+  const senha = document.getElementById("signup-senha").value;
+  const btn   = document.getElementById("btn-signup");
+  if (!nome || !email || !senha) { setFormError("signup", "Preencha todos os campos."); return; }
+  setLoading(btn, true);
+  try {
+    const data  = await api("POST", "/auth/signup", { nome, email, senha });
+    state.token = data.session?.access_token;
+    state.user  = data.user;
+    if (!state.token) {
+      showToast(
+        "Cadastro realizado! Verifique seu e-mail para confirmar a conta e depois faça login.",
+        "info",
+        7000
+      );
+      return;
+    }
+    saveSession(state.token, state.user);
+    window.location.href = "app.html";
+  } catch (err) {
+    setFormError("signup", err.message);
+  } finally { setLoading(btn, false); }
+}
+ 
+function handleLogout() {
+  clearSession();
+  window.location.href = "login.html";
+}
+ 
+/* ── Jogos ────────────────────────────────────────────────────────────────── */
+ 
+async function loadJogos() {
+  const listEl  = document.getElementById("jogos-list");
+  const loadEl  = document.getElementById("jogos-loading");
+  const emptyEl = document.getElementById("jogos-empty");
+ 
+  // Esconde tudo primeiro
+  listEl.hidden  = true;
+  emptyEl.hidden = true;
+  loadEl.hidden  = false;
+  listEl.innerHTML = "";
+ 
+  try {
+    await fetchConfig();
+    const [jogos, meusPalpites] = await Promise.all([
+      fetchAndNormalizeJogos(),
+      api("GET", "/palpites/meus"),
+    ]);
+
+    state.jogos = jogos;
+    state.palpites = {};
+    meusPalpites.forEach(p => {
+      state.palpites[p.jogo_id] = p;
+    });
+
+    state.jogos.sort((a, b) => {
+      const temPalpiteA = state.palpites[a.id] ? 1 : 0;
+      const temPalpiteB = state.palpites[b.id] ? 1 : 0;
+      if (temPalpiteA > temPalpiteB) return -1;
+      if (temPalpiteA < temPalpiteB) return 1;
+      return new Date(a.data_hora) - new Date(b.data_hora);
+    });
+
+    loadEl.hidden = true;
+    updateJogosDisplay();
+  } catch (err) {
+    loadEl.hidden = true;
+    showToast("Erro ao carregar jogos: " + err.message, "error");
+  }
+}
+
+ 
+    function renderJogoCard(jogo) {
+  const status  = getGameStatus(jogo);
+  const palpite = state.palpites[jogo.id];
+  const locked  = status !== "aberto";
+ 
+  const badges = {
+    "aberto":       `<span class="badge badge-aberto">🟢 Aberto</span>`,
+    "em-andamento": `<span class="badge badge-encerrado">🔴 Em andamento</span>`,
+    "encerrado":    `<span class="badge badge-encerrado">⏹ Encerrado</span>`,
+  };
+ 
+  const resultadoHtml = (status === "encerrado") ? `
+    <div class="jogo-resultado">
+      <div class="time-resultado">
+        <span class="nome">${esc(jogo.time_a)}</span>
+        <span class="gol">${jogo.gols_a}</span>
+      </div>
+      <span class="resultado-vs">×</span>
+      <div class="time-resultado">
+        <span class="gol">${jogo.gols_b}</span>
+        <span class="nome">${esc(jogo.time_b)}</span>
+      </div>
+    </div>` : "";
+ 
+  const palpiteTag = palpite
+    ? `<div class="palpite-salvo">✔ Seu palpite: ${palpite.palpite_gols_a} × ${palpite.palpite_gols_b}</div>`
+    : "";
+ 
+  const valA = palpite != null ? palpite.palpite_gols_a : "";
+  const valB = palpite != null ? palpite.palpite_gols_b : "";
+ 
+  const inputsHtml = `
+    <div class="jogo-matchup">
+      <div class="time-block">
+        <span class="time-nome">${esc(jogo.time_a)}</span>
+        <input type="number" min="0" max="99" class="score-input"
+          id="gols-a-${jogo.id}" data-jogo-id="${jogo.id}" value="${valA}" placeholder="0"
+          ${locked ? "disabled" : ""} />
+        ${!locked ? palpiteTag : ""}
+      </div>
+      <span class="vs-sep">VS</span>
+      <div class="time-block">
+        <span class="time-nome">${esc(jogo.time_b)}</span>
+        <input type="number" min="0" max="99" class="score-input"
+          id="gols-b-${jogo.id}" data-jogo-id="${jogo.id}" value="${valB}" placeholder="0"
+          ${locked ? "disabled" : ""} />
+        ${(locked && palpite) ? palpiteTag : ""}
+      </div>
+    </div>`;
+ 
+  const footerHtml = locked
+    ? `<div class="jogo-footer">
+        <span class="jogo-save-msg">${
+          status === "encerrado"
+            ? "Resultado final registrado."
+            : "Palpites encerrados — jogo em andamento."
+        }</span>
+      </div>`
+    : `<div class="jogo-footer">
+        <span class="jogo-save-msg" id="msg-${jogo.id}">${palpite ? "✅ Salvo automaticamente." : "Digite os placares para salvar."}</span>
+      </div>`;
+ 
+  return `
+    <article class="jogo-card" id="card-${jogo.id}">
+      <div class="jogo-meta">
+        <span class="jogo-data">📅 ${formatDate(jogo.data_hora)}</span>
+        ${badges[status] || ""}
+      </div>
+      ${resultadoHtml}
+      ${inputsHtml}
+      ${footerHtml}
+    </article>`;
+}
+ 
+async function handleJogosAutoSave(jogoId) {
+  const inputA = document.getElementById(`gols-a-${jogoId}`);
+  const inputB = document.getElementById(`gols-b-${jogoId}`);
+  const msgEl = document.getElementById(`msg-${jogoId}`);
+  
+  if (!inputA || !inputB) return;
+  if (inputA.value === "" || inputB.value === "") return;
+  
+  const gols_a = parseInt(inputA.value, 10);
+  const gols_b = parseInt(inputB.value, 10);
+  
+  if (isNaN(gols_a) || isNaN(gols_b) || gols_a < 0 || gols_b < 0) {
+    showToast("Os gols devem ser números ≥ 0.", "error"); return;
+  }
+ 
+  if (msgEl) msgEl.textContent = "Salvando...";
+  
+  try {
+    await api("POST", "/palpites", { jogo_id: jogoId, palpite_gols_a: gols_a, palpite_gols_b: gols_b });
+    state.palpites[jogoId] = { jogo_id: jogoId, palpite_gols_a: gols_a, palpite_gols_b: gols_b };
+    
+    if (msgEl) msgEl.textContent = "✅ Salvo automaticamente.";
+    showToast("Palpite atualizado automaticamente! ⚽", "success");
+ 
+    state.jogos.sort((a, b) => {
+      const temPalpiteA = state.palpites[a.id] ? 1 : 0;
+      const temPalpiteB = state.palpites[b.id] ? 1 : 0;
+      if (temPalpiteA > temPalpiteB) return -1;
+      if (temPalpiteA < temPalpiteB) return 1;
+      return new Date(a.data_hora) - new Date(b.data_hora);
+    });
+ 
+    updateJogosDisplay();
+  } catch (err) {
+    if (msgEl) msgEl.textContent = "❌ Erro ao salvar.";
+    showToast(err.message, "error");
+  }
+}
+ 
+/* ── Ranking ──────────────────────────────────────────────────────────────── */
+ 
+async function loadRanking() {
+  const tbodyEl = document.getElementById("ranking-tbody");
+  const loadEl  = document.getElementById("ranking-loading");
+  const emptyEl = document.getElementById("ranking-empty");
+  const tableEl = document.getElementById("ranking-table-wrap");
+  const podiumEl = document.getElementById("ranking-podium");
+ 
+  tableEl.hidden = true;
+  if (podiumEl) podiumEl.hidden = true;
+  emptyEl.hidden = true;
+  loadEl.hidden  = false;
+ 
+  try {
+    const ranking = await api("GET", "/ranking");
+    loadEl.hidden = true;
+ 
+    if (!Array.isArray(ranking) || ranking.length === 0) {
+      emptyEl.hidden = false; return;
+    }
+
+    // Render podium
+    if (podiumEl) {
+      const p1 = ranking[0];
+      const p2 = ranking.length > 1 ? ranking[1] : null;
+      const p3 = ranking.length > 2 ? ranking[2] : null;
+      
+      const isMe1 = state.user && p1.usuario_id === state.user.id;
+      const isMe2 = p2 && state.user && p2.usuario_id === state.user.id;
+      const isMe3 = p3 && state.user && p3.usuario_id === state.user.id;
+
+      podiumEl.innerHTML = `
+        ${p2 ? `
+        <div class="podium-col podium-col--2 ${isMe2 ? 'is-me' : ''}">
+          <div class="podium-avatar-wrap">
+            <span class="podium-medal">🥈</span>
+            <div class="podium-avatar">${esc(p2.nome.slice(0, 2).toUpperCase())}</div>
+          </div>
+          <div class="podium-name" title="${esc(p2.nome)}">${esc(p2.nome.split(" ")[0])}</div>
+          <div class="podium-pts">${p2.pontos_totais ?? 0} pts</div>
+          <div class="podium-pedestal">2º</div>
+        </div>` : '<div class="podium-col-placeholder"></div>'}
+
+        <div class="podium-col podium-col--1 ${isMe1 ? 'is-me' : ''}">
+          <div class="podium-crown">👑</div>
+          <div class="podium-avatar-wrap">
+            <span class="podium-medal">🥇</span>
+            <div class="podium-avatar">${esc(p1.nome.slice(0, 2).toUpperCase())}</div>
+          </div>
+          <div class="podium-name" title="${esc(p1.nome)}">${esc(p1.nome.split(" ")[0])}</div>
+          <div class="podium-pts">${p1.pontos_totais ?? 0} pts</div>
+          <div class="podium-pedestal">1º</div>
+        </div>
+
+        ${p3 ? `
+        <div class="podium-col podium-col--3 ${isMe3 ? 'is-me' : ''}">
+          <div class="podium-avatar-wrap">
+            <span class="podium-medal">🥉</span>
+            <div class="podium-avatar">${esc(p3.nome.slice(0, 2).toUpperCase())}</div>
+          </div>
+          <div class="podium-name" title="${esc(p3.nome)}">${esc(p3.nome.split(" ")[0])}</div>
+          <div class="podium-pts">${p3.pontos_totais ?? 0} pts</div>
+          <div class="podium-pedestal">3º</div>
+        </div>` : '<div class="podium-col-placeholder"></div>'}
+      `;
+      podiumEl.hidden = false;
+    }
+ 
+    // Render rest in table
+    const tableParticipants = ranking.slice(3);
+    if (tableParticipants.length > 0) {
+      tbodyEl.innerHTML = tableParticipants.map((r, i) => {
+        const idx = i + 3;
+        const isMe   = state.user && r.usuario_id === state.user.id;
+        const rowCls = isMe ? "is-me" : "";
+        return `
+          <tr class="${rowCls}" style="animation-delay:${i*0.04}s">
+            <td><span class="rank-badge normal">${idx + 1}</span></td>
+            <td class="nome-participante">${esc(r.nome)}</td>
+            <td><span class="pontos-val">${r.pontos_totais ?? 0}</span></td>
+          </tr>`;
+      }).join("");
+      tableEl.hidden = false;
+    } else {
+      tbodyEl.innerHTML = "";
+      tableEl.hidden = true;
+    }
+  } catch (err) {
+    loadEl.hidden = true;
+    showToast("Erro ao carregar ranking: " + err.message, "error");
+  }
+}
+ 
+/* ── Init ─────────────────────────────────────────────────────────────────── */
+ 
+function initApp() {
+  showScreen("app-screen");
+  const greet = document.getElementById("user-greeting");
+  if (greet && state.user?.nome) greet.textContent = `Olá, ${state.user.nome.split(" ")[0]}!`;
+  loadBracketSession();
+  showSection("jogos");
+  loadJogos();
+}
+ 
+function checkPageAccess() {
+  const isLoginPage = document.getElementById("auth-screen") !== null;
+  const isAppPage = document.getElementById("app-screen") !== null;
+  const hasToken = loadSession() && state.token;
+
+  if (isAppPage && !hasToken) {
+    window.location.href = "login.html";
+    return false;
+  }
+
+  if (isLoginPage && hasToken) {
+    window.location.href = "app.html";
+    return false;
+  }
+
+  return true;
+}
+
+function bootstrap() {
+  if (!checkPageAccess()) return;
+
+  const isAppPage = document.getElementById("app-screen") !== null;
+
+  if (isAppPage) {
+    initApp();
+  }
+
+  // Tabs
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const tab = btn.dataset.tab;
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b === btn));
+      document.querySelectorAll(".auth-form").forEach(f => f.classList.toggle("active", f.id === `form-${tab}`));
+      setFormError("login",""); setFormError("signup","");
+    });
+  });
+ 
+  // Toggle senha
+  document.querySelectorAll(".toggle-pw").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const inp = document.getElementById(btn.dataset.target);
+      if (!inp) return;
+      inp.type = inp.type === "password" ? "text" : "password";
+      btn.textContent = inp.type === "password" ? "👁" : "🙈";
+    });
+  });
+ 
+  const formLoginEl = document.getElementById("form-login");
+  if (formLoginEl) formLoginEl.addEventListener("submit", handleLogin);
+  const formSignupEl = document.getElementById("form-signup");
+  if (formSignupEl) formSignupEl.addEventListener("submit", handleSignup);
+  const btnLogoutEl = document.getElementById("btn-logout");
+  if (btnLogoutEl) btnLogoutEl.addEventListener("click", handleLogout);
+ 
+  document.querySelectorAll(".nav-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const s = btn.dataset.section;
+      showSection(s);
+      if (s === "jogos") {
+        loadJogos();
+      } else if (s === "grupos") {
+        loadGroupStandings();
+      } else if (s === "matamata") {
+        loadKnockoutBracket();
+      } else if (s === "ranking") {
+        loadRanking();
+      }
+    });
+  });
+ 
+  const btnRefresh = document.getElementById("btn-refresh-ranking");
+  if (btnRefresh) btnRefresh.addEventListener("click", () => {
+    loadRanking();
+  });
+  
+  const groupFilter = document.getElementById("group-filter");
+  if (groupFilter) groupFilter.addEventListener("change", (e) => {
+    state.selectedGroup = e.target.value;
+    updateJogosDisplay();
+  });
+
+  window.addEventListener("resize", () => {
+    const isMataMataActive = document.getElementById("section-matamata")?.classList.contains("active");
+    if (isMataMataActive) {
+      drawBracketLines();
+    }
+  });
+
+  const btnResetSim = document.getElementById("btn-reset-simulation");
+  if (btnResetSim) {
+    btnResetSim.addEventListener("click", () => {
+      state.simulatedPalpites = {};
+      localStorage.removeItem("bolao_simulated_groups");
+      state.bracketPalpites = {};
+      localStorage.removeItem("bolao_bracket");
+      showToast("Simulação limpa com sucesso! 🧹", "success");
+      renderGroupStandings();
+    });
+  }
+
+  const btnResetBracket = document.getElementById("btn-reset-bracket");
+  if (btnResetBracket) {
+    btnResetBracket.addEventListener("click", () => {
+      state.bracketPalpites = {};
+      localStorage.removeItem("bolao_bracket");
+      showToast("Chaveamento limpo com sucesso! 🧹", "success");
+      renderKnockoutBracket();
+    });
+  }
+}
+ 
+document.readyState === "loading"
+  ? document.addEventListener("DOMContentLoaded", bootstrap)
+  : bootstrap();

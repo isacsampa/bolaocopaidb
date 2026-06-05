@@ -1,0 +1,32 @@
+name: Atualizar Resultados do Bolão
+
+on:
+  schedule:
+    # Roda a cada 2 horas (durante o período da copa)
+    - cron: '0 */2 * * *'
+  workflow_dispatch:
+    # Permite rodar manualmente pelo painel do GitHub se necessário
+
+jobs:
+  update-scores:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Baixar código do repositório
+      uses: actions/checkout@v4
+
+    - name: Configurar Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18
+        cache: 'npm'
+
+    - name: Instalar dependências
+      run: npm ci
+
+    - name: Rodar script de atualização
+      env:
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
+      run: node scripts/update_results.js

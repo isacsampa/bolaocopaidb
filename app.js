@@ -19,7 +19,6 @@ const state = {
   jogos: [],
   selectedGroup: "",
   bracketPalpites: {},
-  activeGroupRounds: {},
 };
 
 const GROUPS = {
@@ -432,14 +431,13 @@ function renderGroupStandings() {
       </tr>
     `).join("");
 
-    const activeRound = state.activeGroupRounds[code] || 1;
-
     // Group matches and sort chronologically
     const groupMatches = state.jogos
       .filter(jogo => GROUPS[code].includes(jogo.time_a) && GROUPS[code].includes(jogo.time_b))
       .sort((a, b) => new Date(a.data_hora) - new Date(b.data_hora));
 
-    const matchesHtml = groupMatches.map((jogo, index) => {
+    let matchesHtml = "";
+    groupMatches.forEach((jogo, index) => {
       const status = getGameStatus(jogo);
       const palpite = state.palpites[jogo.id];
       const locked = status !== "aberto";
@@ -448,7 +446,11 @@ function renderGroupStandings() {
       
       const round = Math.floor(index / 2) + 1;
       
-      return `
+      if (index % 2 === 0) {
+        matchesHtml += `<div class="group-round-title">${round}ª Rodada</div>`;
+      }
+      
+      matchesHtml += `
         <div class="group-match-row round-${round} ${status}">
           <span class="group-match-date">${formatDateShort(jogo.data_hora)}</span>
           <div class="group-match-teams">
@@ -465,15 +467,7 @@ function renderGroupStandings() {
           ${locked ? `<span class="locked-icon" title="Jogo encerrado ou em andamento">🔒</span>` : ""}
         </div>
       `;
-    }).join("");
-
-    const buttonsHtml = `
-      <div class="group-round-selector">
-        <button type="button" class="group-round-btn ${activeRound === 1 ? 'active' : ''}" data-group="${code}" data-round="1">1ª</button>
-        <button type="button" class="group-round-btn ${activeRound === 2 ? 'active' : ''}" data-group="${code}" data-round="2">2ª</button>
-        <button type="button" class="group-round-btn ${activeRound === 3 ? 'active' : ''}" data-group="${code}" data-round="3">3ª</button>
-      </div>
-    `;
+    });
 
     return `
       <div class="group-standings-card">
@@ -502,33 +496,14 @@ function renderGroupStandings() {
         <div class="group-card-matches">
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
             <h4 style="margin: 0;">Jogos</h4>
-            ${buttonsHtml}
           </div>
-          <div class="group-matches-list" id="matches-list-${code}" data-active-round="${activeRound}">${matchesHtml}</div>
+          <div class="group-matches-list" id="matches-list-${code}">${matchesHtml}</div>
         </div>
       </div>`;
   }).join("");
 
   container.querySelectorAll(".group-score-input").forEach(input => {
     input.addEventListener("change", () => handleGroupGameAutoSave(Number(input.dataset.jogoId)));
-  });
-
-  container.querySelectorAll(".group-round-btn").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const groupCode = btn.dataset.group;
-      const round = Number(btn.dataset.round);
-      state.activeGroupRounds[groupCode] = round;
-      
-      const parent = btn.closest(".group-card-matches");
-      if (parent) {
-        parent.querySelectorAll(".group-round-btn").forEach(b => b.classList.toggle("active", b === btn));
-        const list = parent.querySelector(".group-matches-list");
-        if (list) {
-          list.dataset.activeRound = round;
-        }
-      }
-    });
   });
 }
 

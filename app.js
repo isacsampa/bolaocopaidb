@@ -1272,16 +1272,17 @@ async function loadRanking() {
       podiumEl.hidden = false;
     }
  
-    // Render rest in table
-    const tableParticipants = ranking.slice(3);
+    // Render all in table
+    const tableParticipants = ranking;
     if (tableParticipants.length > 0) {
       tbodyEl.innerHTML = tableParticipants.map((r, i) => {
-        const idx = i + 3;
+        const idx = i;
         const isMe   = state.user && r.usuario_id === state.user.id;
         const rowCls = isMe ? "is-me" : "";
+        const badgeClass = idx === 0 ? "gold" : (idx === 1 ? "silver" : (idx === 2 ? "bronze" : "normal"));
         return `
           <tr class="${rowCls}" style="animation-delay:${i*0.04}s">
-            <td><span class="rank-badge normal">${idx + 1}</span></td>
+            <td><span class="rank-badge ${badgeClass}">${idx + 1}</span></td>
             <td class="nome-participante">${esc(r.nome)}</td>
             <td><span class="pontos-val">${r.pontos_totais ?? 0}</span></td>
           </tr>`;

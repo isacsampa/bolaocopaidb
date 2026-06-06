@@ -1489,17 +1489,32 @@ body {
   .time-resultado .gol { font-size: 2rem; }
 
   .jogo-matchup {
-    flex-direction: column;
+    flex-direction: row;
     gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
   }
-  .time-block { width: 100%; }
-  .time-nome { font-size: 0.8rem; }
+  .time-block {
+    flex: 1;
+    min-width: 0;
+  }
+  .time-nome {
+    font-size: 0.72rem;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   .score-input {
-    width: 70px;
-    height: 54px;
-    font-size: 1.6rem;
+    width: 52px;
+    height: 42px;
+    font-size: 1.25rem;
   }
-  .vs-sep { display: none; }
+  .vs-sep {
+    display: inline-block;
+    font-size: 0.9rem;
+    padding-top: 1.25rem;
+  }
 
   .jogo-footer {
     flex-direction: column;

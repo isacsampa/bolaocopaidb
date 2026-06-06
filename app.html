@@ -26,11 +26,7 @@
 
     <!-- Nav -->
     <nav class="main-nav">
-      <button class="nav-btn active" data-section="jogos">
-        <span class="nav-icon">⚽</span>
-        <span>Meus Palpites</span>
-      </button>
-      <button class="nav-btn" data-section="grupos">
+      <button class="nav-btn active" data-section="grupos">
         <span class="nav-icon">📊</span>
         <span>Fase de Grupos</span>
       </button>
@@ -47,53 +43,11 @@
     <!-- Main Content -->
     <main class="main-content">
 
-      <!-- ── Seção: Jogos ─────────────────────────────────────────────── -->
-      <section id="section-jogos" class="content-section active">
-        <div class="section-header">
-          <h2 class="section-title">Jogos & Palpites</h2>
-          <p class="section-desc">Insira seus palpites antes do início de cada jogo.</p>
-        </div>
-
-        <div class="section-controls">
-          <label for="group-filter">Filtrar por grupo:</label>
-          <select id="group-filter">
-            <option value="">Todos os grupos</option>
-            <option value="A">Grupo A</option>
-            <option value="B">Grupo B</option>
-            <option value="C">Grupo C</option>
-            <option value="D">Grupo D</option>
-            <option value="E">Grupo E</option>
-            <option value="F">Grupo F</option>
-            <option value="G">Grupo G</option>
-            <option value="H">Grupo H</option>
-            <option value="I">Grupo I</option>
-            <option value="J">Grupo J</option>
-            <option value="K">Grupo K</option>
-            <option value="L">Grupo L</option>
-          </select>
-        </div>
-
-        <div id="jogos-loading" class="loading-state">
-          <div class="spinner"></div>
-          <p>Carregando jogos…</p>
-        </div>
-
-        <div id="jogos-empty" class="empty-state" hidden>
-          <span class="empty-icon">📅</span>
-          <p>Nenhum jogo cadastrado ainda.</p>
-        </div>
-
-        <div id="jogos-list" class="jogos-grid" hidden></div>
-      </section>
-
       <!-- ── Seção: Fase de Grupos ──────────────────────────────────────── -->
-      <section id="section-grupos" class="content-section">
-        <div class="section-header" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem;">
-          <div>
-            <h2 class="section-title">Fase de Grupos</h2>
-            <p class="section-desc">Classificação em tempo real de acordo com sua simulação local.</p>
-          </div>
-          <button id="btn-reset-simulation" class="btn-secondary" style="margin-bottom: 0;">🧹 Limpar Simulação</button>
+      <section id="section-grupos" class="content-section active">
+        <div class="section-header">
+          <h2 class="section-title">Fase de Grupos</h2>
+          <p class="section-desc">Insira seus palpites e veja a classificação do grupo em tempo real.</p>
         </div>
         <div id="group-standings" class="group-standings"></div>
       </section>

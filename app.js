@@ -19,7 +19,6 @@ const state = {
   jogos: [],
   selectedGroup: "",
   bracketPalpites: {},
-  simulatedPalpites: {},
   activeGroupRounds: {},
 };
 
@@ -185,25 +184,11 @@ function loadBracketSession() {
   } catch {
     state.bracketPalpites = {};
   }
-  try {
-    const savedGroups = localStorage.getItem("bolao_simulated_groups");
-    state.simulatedPalpites = savedGroups ? JSON.parse(savedGroups) : {};
-  } catch {
-    state.simulatedPalpites = {};
-  }
 }
 
 function saveBracketSession() {
   try {
     localStorage.setItem("bolao_bracket", JSON.stringify(state.bracketPalpites));
-  } catch {
-    // ignore storage errors
-  }
-} 
-
-function saveSimulatedGroups() {
-  try {
-    localStorage.setItem("bolao_simulated_groups", JSON.stringify(state.simulatedPalpites));
   } catch {
     // ignore storage errors
   }
@@ -334,14 +319,14 @@ function buildGroupStandings(groupCode) {
     const isGroupMatch = teams.includes(jogo.time_a) && teams.includes(jogo.time_b);
     if (!isGroupMatch) return;
 
-    // Use simulated results if official result is not available
+    // Use user guesses (palpites) if official result is not available
     let gols_a = jogo.gols_a;
     let gols_b = jogo.gols_b;
     if (gols_a === null || gols_b === null) {
-      const sim = state.simulatedPalpites[jogo.id];
-      if (sim) {
-        gols_a = sim.gols_a;
-        gols_b = sim.gols_b;
+      const p = state.palpites[jogo.id];
+      if (p && p.palpite_gols_a !== null && p.palpite_gols_b !== null) {
+        gols_a = p.palpite_gols_a;
+        gols_b = p.palpite_gols_b;
       }
     }
 
@@ -400,31 +385,30 @@ function formatDateShort(iso) {
 
 
 
-function handleGroupGameAutoSave(jogoId) {
+async function handleGroupGameAutoSave(jogoId) {
   const inputA = document.getElementById(`group-gols-a-${jogoId}`);
   const inputB = document.getElementById(`group-gols-b-${jogoId}`);
   
   if (!inputA || !inputB) return;
-  
-  if (inputA.value === "" || inputB.value === "") {
-    if (state.simulatedPalpites[jogoId]) {
-      delete state.simulatedPalpites[jogoId];
-      saveSimulatedGroups();
-      renderGroupStandings();
-    }
-    return;
-  }
+  if (inputA.value === "" || inputB.value === "") return;
   
   const gols_a = parseInt(inputA.value, 10);
   const gols_b = parseInt(inputB.value, 10);
   
   if (isNaN(gols_a) || isNaN(gols_b) || gols_a < 0 || gols_b < 0) {
+    showToast("Os gols devem ser números ≥ 0.", "error");
     return;
   }
   
-  state.simulatedPalpites[jogoId] = { gols_a, gols_b };
-  saveSimulatedGroups();
-  renderGroupStandings();
+  try {
+    await api("POST", "/palpites", { jogo_id: jogoId, palpite_gols_a: gols_a, palpite_gols_b: gols_b });
+    state.palpites[jogoId] = { jogo_id: jogoId, palpite_gols_a: gols_a, palpite_gols_b: gols_b };
+    
+    showToast("Palpite salvo com sucesso! ⚽", "success");
+    renderGroupStandings();
+  } catch (err) {
+    showToast("Erro ao salvar palpite: " + err.message, "error");
+  }
 }
 
 function renderGroupStandings() {
@@ -457,10 +441,10 @@ function renderGroupStandings() {
 
     const matchesHtml = groupMatches.map((jogo, index) => {
       const status = getGameStatus(jogo);
-      const sim = state.simulatedPalpites[jogo.id];
+      const palpite = state.palpites[jogo.id];
       const locked = status !== "aberto";
-      const valA = sim != null ? sim.gols_a : "";
-      const valB = sim != null ? sim.gols_b : "";
+      const valA = palpite != null ? palpite.palpite_gols_a : "";
+      const valB = palpite != null ? palpite.palpite_gols_b : "";
       
       const round = Math.floor(index / 2) + 1;
       
@@ -560,9 +544,17 @@ async function loadGroupStandings() {
   
   try {
     await fetchConfig();
-    if (!state.jogos || state.jogos.length === 0) {
-      state.jogos = await fetchAndNormalizeJogos();
-    }
+    const [jogos, meusPalpites] = await Promise.all([
+      (!state.jogos || state.jogos.length === 0) ? fetchAndNormalizeJogos() : Promise.resolve(state.jogos),
+      api("GET", "/palpites/meus")
+    ]);
+    
+    state.jogos = jogos;
+    state.palpites = {};
+    meusPalpites.forEach(p => {
+      state.palpites[p.jogo_id] = p;
+    });
+
     renderGroupStandings();
   } catch (err) {
     if (container) {
@@ -571,13 +563,7 @@ async function loadGroupStandings() {
   }
 }
 
-function getFilteredJogos() {
-  if (!state.selectedGroup || !GROUPS[state.selectedGroup]) return state.jogos;
-  const grupoTimes = GROUPS[state.selectedGroup];
-  return state.jogos.filter(jogo =>
-    grupoTimes.includes(jogo.time_a) || grupoTimes.includes(jogo.time_b)
-  );
-}
+
 
 async function fetchConfig() {
   if (state.config && Object.keys(state.config).length > 0) return;
@@ -616,32 +602,7 @@ function updateDeadlineBanner() {
   }
 }
 
-function updateJogosDisplay() {
-  updateDeadlineBanner();
-  const listEl  = document.getElementById("jogos-list");
-  const emptyEl = document.getElementById("jogos-empty");
-  const emptyText = emptyEl.querySelector("p");
-  const jogos = getFilteredJogos();
 
-  if (jogos.length === 0) {
-    emptyText.textContent = state.selectedGroup
-      ? `Nenhum jogo encontrado para o Grupo ${state.selectedGroup}.`
-      : "Nenhum jogo cadastrado ainda.";
-    listEl.innerHTML = "";
-    listEl.hidden = true;
-    emptyEl.hidden = false;
-    return;
-  }
-
-  emptyText.textContent = "Nenhum jogo cadastrado ainda.";
-  emptyEl.hidden = true;
-  listEl.innerHTML = jogos.map(renderJogoCard).join("");
-  listEl.hidden = false;
-  listEl.querySelectorAll(".score-input").forEach(input => {
-    input.addEventListener("change", () => handleJogosAutoSave(Number(input.dataset.jogoId)));
-  });
-  loadGroupStandings();
-}
 
 function esc(str) {
   return String(str || "")
@@ -656,8 +617,10 @@ function isGroupSimulatedOrPlayed(groupCode) {
     const isGroupMatch = teams.includes(jogo.time_a) && teams.includes(jogo.time_b);
     if (!isGroupMatch) return false;
     const hasOfficial = jogo.gols_a !== null && jogo.gols_b !== null;
-    const hasSimulated = state.simulatedPalpites && state.simulatedPalpites[jogo.id] != null;
-    return hasOfficial || hasSimulated;
+    const hasPalpite = state.palpites && state.palpites[jogo.id] != null && 
+                       state.palpites[jogo.id].palpite_gols_a !== null && 
+                       state.palpites[jogo.id].palpite_gols_b !== null;
+    return hasOfficial || hasPalpite;
   });
 }
 
@@ -1190,9 +1153,16 @@ async function loadKnockoutBracket() {
   
   try {
     await fetchConfig();
-    if (!state.jogos || state.jogos.length === 0) {
-      state.jogos = await fetchAndNormalizeJogos();
-    }
+    const [jogos, meusPalpites] = await Promise.all([
+      (!state.jogos || state.jogos.length === 0) ? fetchAndNormalizeJogos() : Promise.resolve(state.jogos),
+      api("GET", "/palpites/meus")
+    ]);
+    
+    state.jogos = jogos;
+    state.palpites = {};
+    meusPalpites.forEach(p => {
+      state.palpites[p.jogo_id] = p;
+    });
     
     computeThirdPlaceAssignments();
     renderBestThirdTeams();
@@ -1256,173 +1226,7 @@ function handleLogout() {
   window.location.href = "login.html";
 }
  
-/* ── Jogos ────────────────────────────────────────────────────────────────── */
- 
-async function loadJogos() {
-  const listEl  = document.getElementById("jogos-list");
-  const loadEl  = document.getElementById("jogos-loading");
-  const emptyEl = document.getElementById("jogos-empty");
- 
-  // Esconde tudo primeiro
-  listEl.hidden  = true;
-  emptyEl.hidden = true;
-  loadEl.hidden  = false;
-  listEl.innerHTML = "";
- 
-  try {
-    await fetchConfig();
-    const [jogos, meusPalpites] = await Promise.all([
-      fetchAndNormalizeJogos(),
-      api("GET", "/palpites/meus"),
-    ]);
 
-    state.jogos = jogos;
-    state.palpites = {};
-    meusPalpites.forEach(p => {
-      state.palpites[p.jogo_id] = p;
-    });
-
-    state.jogos.sort((a, b) => {
-      const temPalpiteA = state.palpites[a.id] ? 1 : 0;
-      const temPalpiteB = state.palpites[b.id] ? 1 : 0;
-      if (temPalpiteA > temPalpiteB) return -1;
-      if (temPalpiteA < temPalpiteB) return 1;
-      return new Date(a.data_hora) - new Date(b.data_hora);
-    });
-
-    loadEl.hidden = true;
-    updateJogosDisplay();
-  } catch (err) {
-    loadEl.hidden = true;
-    showToast("Erro ao carregar jogos: " + err.message, "error");
-  }
-}
-
- 
-    function renderJogoCard(jogo) {
-  const status  = getGameStatus(jogo);
-  const palpite = state.palpites[jogo.id];
-  const locked  = status !== "aberto";
- 
-  const badges = {
-    "aberto":       `<span class="badge badge-aberto">🟢 Aberto</span>`,
-    "em-andamento": `<span class="badge badge-encerrado">🔴 Em andamento</span>`,
-    "encerrado":    `<span class="badge badge-encerrado">⏹ Encerrado</span>`,
-  };
- 
-  const resultadoHtml = (status === "encerrado") ? `
-    <div class="jogo-resultado">
-      <div class="time-resultado">
-        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-          ${getTeamFlagHtml(jogo.time_a)}
-          <span class="nome">${esc(jogo.time_a)}</span>
-        </div>
-        <span class="gol">${jogo.gols_a}</span>
-      </div>
-      <span class="resultado-vs">×</span>
-      <div class="time-resultado">
-        <span class="gol">${jogo.gols_b}</span>
-        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-          ${getTeamFlagHtml(jogo.time_b)}
-          <span class="nome">${esc(jogo.time_b)}</span>
-        </div>
-      </div>
-    </div>` : "";
- 
-  const palpiteTag = palpite
-    ? `<div class="palpite-salvo">✔ Seu palpite: ${palpite.palpite_gols_a} × ${palpite.palpite_gols_b}</div>`
-    : "";
- 
-  const valA = palpite != null ? palpite.palpite_gols_a : "";
-  const valB = palpite != null ? palpite.palpite_gols_b : "";
- 
-  const inputsHtml = `
-    <div class="jogo-matchup">
-      <div class="time-block">
-        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-          ${getTeamFlagHtml(jogo.time_a)}
-          <span class="time-nome">${esc(jogo.time_a)}</span>
-        </div>
-        <input type="number" min="0" max="99" class="score-input"
-          id="gols-a-${jogo.id}" data-jogo-id="${jogo.id}" value="${valA}" placeholder="0"
-          ${locked ? "disabled" : ""} />
-        ${!locked ? palpiteTag : ""}
-      </div>
-      <span class="vs-sep">VS</span>
-      <div class="time-block">
-        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-          ${getTeamFlagHtml(jogo.time_b)}
-          <span class="time-nome">${esc(jogo.time_b)}</span>
-        </div>
-        <input type="number" min="0" max="99" class="score-input"
-          id="gols-b-${jogo.id}" data-jogo-id="${jogo.id}" value="${valB}" placeholder="0"
-          ${locked ? "disabled" : ""} />
-        ${(locked && palpite) ? palpiteTag : ""}
-      </div>
-    </div>`;
- 
-  const footerHtml = locked
-    ? `<div class="jogo-footer">
-        <span class="jogo-save-msg">${
-          status === "encerrado"
-            ? "Resultado final registrado."
-            : "Palpites encerrados — jogo em andamento."
-        }</span>
-      </div>`
-    : `<div class="jogo-footer">
-        <span class="jogo-save-msg" id="msg-${jogo.id}">${palpite ? "✅ Salvo automaticamente." : "Digite os placares para salvar."}</span>
-      </div>`;
- 
-  return `
-    <article class="jogo-card" id="card-${jogo.id}">
-      <div class="jogo-meta">
-        <span class="jogo-data">📅 ${formatDate(jogo.data_hora)}</span>
-        ${badges[status] || ""}
-      </div>
-      ${resultadoHtml}
-      ${inputsHtml}
-      ${footerHtml}
-    </article>`;
-}
- 
-async function handleJogosAutoSave(jogoId) {
-  const inputA = document.getElementById(`gols-a-${jogoId}`);
-  const inputB = document.getElementById(`gols-b-${jogoId}`);
-  const msgEl = document.getElementById(`msg-${jogoId}`);
-  
-  if (!inputA || !inputB) return;
-  if (inputA.value === "" || inputB.value === "") return;
-  
-  const gols_a = parseInt(inputA.value, 10);
-  const gols_b = parseInt(inputB.value, 10);
-  
-  if (isNaN(gols_a) || isNaN(gols_b) || gols_a < 0 || gols_b < 0) {
-    showToast("Os gols devem ser números ≥ 0.", "error"); return;
-  }
- 
-  if (msgEl) msgEl.textContent = "Salvando...";
-  
-  try {
-    await api("POST", "/palpites", { jogo_id: jogoId, palpite_gols_a: gols_a, palpite_gols_b: gols_b });
-    state.palpites[jogoId] = { jogo_id: jogoId, palpite_gols_a: gols_a, palpite_gols_b: gols_b };
-    
-    if (msgEl) msgEl.textContent = "✅ Salvo automaticamente.";
-    showToast("Palpite atualizado automaticamente! ⚽", "success");
- 
-    state.jogos.sort((a, b) => {
-      const temPalpiteA = state.palpites[a.id] ? 1 : 0;
-      const temPalpiteB = state.palpites[b.id] ? 1 : 0;
-      if (temPalpiteA > temPalpiteB) return -1;
-      if (temPalpiteA < temPalpiteB) return 1;
-      return new Date(a.data_hora) - new Date(b.data_hora);
-    });
- 
-    updateJogosDisplay();
-  } catch (err) {
-    if (msgEl) msgEl.textContent = "❌ Erro ao salvar.";
-    showToast(err.message, "error");
-  }
-}
  
 /* ── Ranking ──────────────────────────────────────────────────────────────── */
  
@@ -1525,8 +1329,8 @@ function initApp() {
   const greet = document.getElementById("user-greeting");
   if (greet && state.user?.nome) greet.textContent = `Olá, ${state.user.nome.split(" ")[0]}!`;
   loadBracketSession();
-  showSection("jogos");
-  loadJogos();
+  showSection("grupos");
+  loadGroupStandings();
 }
  
 function checkPageAccess() {
@@ -1588,9 +1392,7 @@ function bootstrap() {
     btn.addEventListener("click", () => {
       const s = btn.dataset.section;
       showSection(s);
-      if (s === "jogos") {
-        loadJogos();
-      } else if (s === "grupos") {
+      if (s === "grupos") {
         loadGroupStandings();
       } else if (s === "matamata") {
         loadKnockoutBracket();
@@ -1605,11 +1407,7 @@ function bootstrap() {
     loadRanking();
   });
   
-  const groupFilter = document.getElementById("group-filter");
-  if (groupFilter) groupFilter.addEventListener("change", (e) => {
-    state.selectedGroup = e.target.value;
-    updateJogosDisplay();
-  });
+
 
   window.addEventListener("resize", () => {
     const isMataMataActive = document.getElementById("section-matamata")?.classList.contains("active");
@@ -1618,17 +1416,7 @@ function bootstrap() {
     }
   });
 
-  const btnResetSim = document.getElementById("btn-reset-simulation");
-  if (btnResetSim) {
-    btnResetSim.addEventListener("click", () => {
-      state.simulatedPalpites = {};
-      localStorage.removeItem("bolao_simulated_groups");
-      state.bracketPalpites = {};
-      localStorage.removeItem("bolao_bracket");
-      showToast("Simulação limpa com sucesso! 🧹", "success");
-      renderGroupStandings();
-    });
-  }
+
 
   const btnResetBracket = document.getElementById("btn-reset-bracket");
   if (btnResetBracket) {

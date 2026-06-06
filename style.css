@@ -61,6 +61,19 @@ body {
   overflow-x: hidden;
 }
 
+/* Bandeiras dos Países */
+.flag-icon {
+  width: 22px;
+  height: 15px;
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  vertical-align: middle;
+  display: inline-block;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+}
+
 /* Auth Background Orbs & Grid */
 .auth-bg {
   position: fixed;

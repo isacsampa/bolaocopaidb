@@ -38,6 +38,63 @@ const GROUPS = {
   L: ["Inglaterra", "Croácia", "Gana", "Panamá"],
 };
 
+const TEAM_FLAGS = {
+  "México": "mx",
+  "África do Sul": "za",
+  "Coreia do Sul": "kr",
+  "República Tcheca": "cz",
+  "Canadá": "ca",
+  "Bósnia e Herzegovina": "ba",
+  "Catar": "qa",
+  "Suíça": "ch",
+  "Brasil": "br",
+  "Marrocos": "ma",
+  "Haiti": "ht",
+  "Escócia": "gb-sct",
+  "Estados Unidos": "us",
+  "Paraguai": "py",
+  "Austrália": "au",
+  "Turquia": "tr",
+  "Alemanha": "de",
+  "Curaçao": "cw",
+  "Costa do Marfim": "ci",
+  "Equador": "ec",
+  "Holanda": "nl",
+  "Japão": "jp",
+  "Suécia": "se",
+  "Tunísia": "tn",
+  "Bélgica": "be",
+  "Egito": "eg",
+  "Irã": "ir",
+  "Nova Zelândia": "nz",
+  "Espanha": "es",
+  "Cabo Verde": "cv",
+  "Arábia Saudita": "sa",
+  "Uruguai": "uy",
+  "França": "fr",
+  "Senegal": "sn",
+  "Iraque": "iq",
+  "Noruega": "no",
+  "Argentina": "ar",
+  "Argélia": "dz",
+  "Áustria": "at",
+  "Jordânia": "jo",
+  "Portugal": "pt",
+  "República Democrática do Congo": "cd",
+  "Uzbequistão": "uz",
+  "Colômbia": "co",
+  "Inglaterra": "gb-eng",
+  "Croácia": "hr",
+  "Gana": "gh",
+  "Panamá": "pa"
+};
+
+function getTeamFlagHtml(teamName) {
+  const code = TEAM_FLAGS[teamName];
+  if (!code) return "";
+  return `<img src="https://flagcdn.com/w40/${code}.png" class="flag-icon" alt="${esc(teamName)}" />`;
+}
+
 const KNOCKOUT_ROUNDS = [
   {
     name: "Round of 32",
@@ -379,7 +436,7 @@ function renderGroupStandings() {
     const rows = board.map((team, index) => `
       <tr>
         <td>${index + 1}</td>
-        <td class="team-name-cell">${esc(team.nome)}</td>
+        <td class="team-name-cell"><div style="display: flex; align-items: center; gap: 8px;">${getTeamFlagHtml(team.nome)} <span class="team-name-text">${esc(team.nome)}</span></div></td>
         <td class="pts-cell">${team.pontos}</td>
         <td>${team.jogos}</td>
         <td>${team.vitorias}</td>
@@ -411,7 +468,7 @@ function renderGroupStandings() {
         <div class="group-match-row round-${round} ${status}">
           <span class="group-match-date">${formatDateShort(jogo.data_hora)}</span>
           <div class="group-match-teams">
-            <span class="team-lbl right-align">${esc(jogo.time_a)}</span>
+            <span class="team-lbl right-align" style="display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px;">${esc(jogo.time_a)} ${getTeamFlagHtml(jogo.time_a)}</span>
             <input type="number" min="0" max="99" class="group-score-input"
               id="group-gols-a-${jogo.id}" data-jogo-id="${jogo.id}" value="${valA}" placeholder="0"
               ${locked ? "disabled" : ""} />
@@ -419,7 +476,7 @@ function renderGroupStandings() {
             <input type="number" min="0" max="99" class="group-score-input"
               id="group-gols-b-${jogo.id}" data-jogo-id="${jogo.id}" value="${valB}" placeholder="0"
               ${locked ? "disabled" : ""} />
-            <span class="team-lbl left-align">${esc(jogo.time_b)}</span>
+            <span class="team-lbl left-align" style="display: inline-flex; align-items: center; justify-content: flex-start; gap: 6px;">${getTeamFlagHtml(jogo.time_b)} ${esc(jogo.time_b)}</span>
           </div>
           ${locked ? `<span class="locked-icon" title="Jogo encerrado ou em andamento">🔒</span>` : ""}
         </div>
@@ -808,8 +865,14 @@ function renderBracketMatch(match, alignment) {
   const rightSelected = palpite.picked === "right";
 
   const renderTeam = (teamText, side, isRightSide) => {
+    const flagHtml = getTeamFlagHtml(teamText);
     const circleHtml = `<button type="button" class="bracket-team-circle ${side === "left" ? (leftSelected ? "selected" : "") : (rightSelected ? "selected" : "")}" id="circle-${match.id}-${side}" data-match="${match.id}" data-side="${side}" title="${esc(teamText)}"></button>`;
-    const labelHtml = `<span class="bracket-team-label ${side === "left" ? (leftSelected ? "active" : "") : (rightSelected ? "active" : "")}">${esc(teamText)}</span>`;
+    
+    const labelContent = isRightSide
+      ? `${flagHtml} <span class="bracket-team-text">${esc(teamText)}</span>`
+      : `<span class="bracket-team-text">${esc(teamText)}</span> ${flagHtml}`;
+
+    const labelHtml = `<span class="bracket-team-label ${side === "left" ? (leftSelected ? "active" : "") : (rightSelected ? "active" : "")}" style="display: inline-flex; align-items: center; gap: 4px;">${labelContent}</span>`;
     
     return isRightSide 
       ? `<div class="bracket-team right-align">${circleHtml}${labelHtml}</div>`
@@ -884,7 +947,7 @@ function renderKnockoutBracket() {
         <div class="bracket-final-wrap">
           <!-- Finalista Esquerdo -->
           <div class="bracket-team left-align">
-            <span class="bracket-team-label ${finalLeftSelected ? "active" : ""}">${esc(finalLeftText)}</span>
+            <span class="bracket-team-label ${finalLeftSelected ? "active" : ""}" style="display: inline-flex; align-items: center; gap: 4px;">${esc(finalLeftText)} ${getTeamFlagHtml(finalLeftText)}</span>
             <button type="button" class="bracket-team-circle ${finalLeftSelected ? "selected" : ""}" id="circle-${finalMatch.id}-left" data-match="${finalMatch.id}" data-side="left" title="${esc(finalLeftText)}"></button>
           </div>
           
@@ -893,14 +956,17 @@ function renderKnockoutBracket() {
             <div class="bracket-trophy-circle ${hasChampion ? "has-champion" : ""}" id="circle-champion" title="${hasChampion ? 'Campeão: ' + championName : 'Campeão'}">
               🏆
             </div>
-            <div class="bracket-champion-label ${hasChampion ? "active" : ""}">${esc(championText)}</div>
+            <div class="bracket-champion-label ${hasChampion ? "active" : ""}" style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+              ${hasChampion ? getTeamFlagHtml(championName) : ""}
+              <span>${esc(championText)}</span>
+            </div>
             <div class="bracket-ge-logo">ge</div>
           </div>
           
           <!-- Finalista Direito -->
           <div class="bracket-team right-align">
             <button type="button" class="bracket-team-circle ${finalRightSelected ? "selected" : ""}" id="circle-${finalMatch.id}-right" data-match="${finalMatch.id}" data-side="right" title="${esc(finalRightText)}"></button>
-            <span class="bracket-team-label ${finalRightSelected ? "active" : ""}">${esc(finalRightText)}</span>
+            <span class="bracket-team-label ${finalRightSelected ? "active" : ""}" style="display: inline-flex; align-items: center; gap: 4px;">${getTeamFlagHtml(finalRightText)} ${esc(finalRightText)}</span>
           </div>
         </div>
       </div>
@@ -1247,13 +1313,19 @@ async function loadJogos() {
   const resultadoHtml = (status === "encerrado") ? `
     <div class="jogo-resultado">
       <div class="time-resultado">
-        <span class="nome">${esc(jogo.time_a)}</span>
+        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+          ${getTeamFlagHtml(jogo.time_a)}
+          <span class="nome">${esc(jogo.time_a)}</span>
+        </div>
         <span class="gol">${jogo.gols_a}</span>
       </div>
       <span class="resultado-vs">×</span>
       <div class="time-resultado">
         <span class="gol">${jogo.gols_b}</span>
-        <span class="nome">${esc(jogo.time_b)}</span>
+        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+          ${getTeamFlagHtml(jogo.time_b)}
+          <span class="nome">${esc(jogo.time_b)}</span>
+        </div>
       </div>
     </div>` : "";
  
@@ -1267,7 +1339,10 @@ async function loadJogos() {
   const inputsHtml = `
     <div class="jogo-matchup">
       <div class="time-block">
-        <span class="time-nome">${esc(jogo.time_a)}</span>
+        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+          ${getTeamFlagHtml(jogo.time_a)}
+          <span class="time-nome">${esc(jogo.time_a)}</span>
+        </div>
         <input type="number" min="0" max="99" class="score-input"
           id="gols-a-${jogo.id}" data-jogo-id="${jogo.id}" value="${valA}" placeholder="0"
           ${locked ? "disabled" : ""} />
@@ -1275,7 +1350,10 @@ async function loadJogos() {
       </div>
       <span class="vs-sep">VS</span>
       <div class="time-block">
-        <span class="time-nome">${esc(jogo.time_b)}</span>
+        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+          ${getTeamFlagHtml(jogo.time_b)}
+          <span class="time-nome">${esc(jogo.time_b)}</span>
+        </div>
         <input type="number" min="0" max="99" class="score-input"
           id="gols-b-${jogo.id}" data-jogo-id="${jogo.id}" value="${valB}" placeholder="0"
           ${locked ? "disabled" : ""} />

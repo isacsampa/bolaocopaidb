@@ -36,7 +36,11 @@
 
     <!-- Nav -->
     <nav class="main-nav">
-      <button class="nav-btn active" data-section="grupos">
+      <button class="nav-btn active" data-section="dashboard">
+        <span class="nav-icon">🏠</span>
+        <span>Dashboard</span>
+      </button>
+      <button class="nav-btn" data-section="grupos">
         <span class="nav-icon">📊</span>
         <span>Fase de Grupos</span>
       </button>
@@ -53,8 +57,161 @@
     <!-- Main Content -->
     <main class="main-content">
 
+      <!-- ── Seção: Dashboard ───────────────────────────────────────────── -->
+      <section id="section-dashboard" class="content-section active">
+        <div class="dashboard-summary-grid">
+          <!-- Minha posição -->
+          <div class="summary-card">
+            <span class="summary-card__icon">🏆</span>
+            <div class="summary-card__info">
+              <div class="summary-card__label">Minha Posição</div>
+              <div id="dash-my-rank" class="summary-card__value">—</div>
+            </div>
+          </div>
+          <!-- Pontuação atual -->
+          <div class="summary-card">
+            <span class="summary-card__icon">✨</span>
+            <div class="summary-card__info">
+              <div class="summary-card__label">Pontos Totais</div>
+              <div id="dash-my-points" class="summary-card__value">0</div>
+            </div>
+          </div>
+          <!-- Próximos jogos -->
+          <div class="summary-card">
+            <span class="summary-card__icon">⚽</span>
+            <div class="summary-card__info">
+              <div class="summary-card__label">Jogos Restantes</div>
+              <div id="dash-remaining-games" class="summary-card__value">—</div>
+            </div>
+          </div>
+          <!-- Palpites realizados -->
+          <div class="summary-card">
+            <span class="summary-card__icon">📝</span>
+            <div class="summary-card__info">
+              <div class="summary-card__label">Palpites Feitos</div>
+              <div id="dash-bets-made" class="summary-card__value">0/0</div>
+            </div>
+          </div>
+          <!-- Participantes -->
+          <div class="summary-card">
+            <span class="summary-card__icon">👥</span>
+            <div class="summary-card__info">
+              <div class="summary-card__label">Participantes</div>
+              <div id="dash-total-users" class="summary-card__value">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Destaque: Próxima partida com contagem regressiva -->
+        <div class="dashboard-highlight-card">
+          <div class="highlight-header">
+            <span class="badge-live">🔥 PRÓXIMA PARTIDA</span>
+            <div id="countdown-timer" class="countdown-timer">00:00:00</div>
+          </div>
+          <div id="highlight-match-container" class="highlight-match-container">
+            <div class="btn-spinner" style="margin: 2rem auto;"></div>
+          </div>
+        </div>
+
+        <!-- Showcase das Cidades-Sede -->
+        <div class="dashboard-panel host-cities-panel">
+          <div class="panel-header-row">
+            <h3 class="panel-title">🏟️ Cidades-Sede da Copa 2026</h3>
+            <span class="we-are-26-stamp">#WEARE26</span>
+          </div>
+          <div class="host-cities-carousel" id="host-cities-container">
+            <div class="btn-spinner" style="margin: 1.5rem auto;"></div>
+          </div>
+        </div>
+
+        <div class="dashboard-layout-row">
+          <!-- Col Esquerda: Gamificação -->
+          <div class="dashboard-col">
+            <!-- Estatísticas -->
+            <div class="dashboard-panel">
+              <h3 class="panel-title">📊 Minhas Estatísticas</h3>
+              <div class="stats-grid">
+                <div class="stat-box">
+                  <div id="stat-efficiency" class="stat-value">0%</div>
+                  <div class="stat-label">Aproveitamento</div>
+                </div>
+                <div class="stat-box">
+                  <div id="stat-hits" class="stat-value">0</div>
+                  <div class="stat-label">Acertos Exatos (3 pts)</div>
+                </div>
+                <div class="stat-box">
+                  <div id="stat-outcome-hits" class="stat-value">0</div>
+                  <div class="stat-label">Acertos Parciais (1 pt)</div>
+                </div>
+                <div class="stat-box">
+                  <div id="stat-misses" class="stat-value">0</div>
+                  <div class="stat-label">Erros (0 pts)</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Conquistas -->
+            <div class="dashboard-panel">
+              <h3 class="panel-title">🏆 Minhas Conquistas</h3>
+              <div class="achievements-list">
+                <div id="ach-first" class="achievement-item locked">
+                  <span class="achievement-icon">🎯</span>
+                  <div class="achievement-info">
+                    <div class="achievement-name">Primeiro Acerto</div>
+                    <div class="achievement-desc">Acertou seu primeiro palpite oficial (exato ou parcial).</div>
+                  </div>
+                </div>
+                <div id="ach-king" class="achievement-item locked">
+                  <span class="achievement-icon">👑</span>
+                  <div class="achievement-info">
+                    <div class="achievement-name">Rei dos Palpites</div>
+                    <div class="achievement-desc">Acertou pelo menos 5 placares exatos (3 pontos).</div>
+                  </div>
+                </div>
+                <div id="ach-streak" class="achievement-item locked">
+                  <span class="achievement-icon">⚡</span>
+                  <div class="achievement-info">
+                    <div class="achievement-name">Sequência Lendária</div>
+                    <div class="achievement-desc">Acertou o resultado de 3 partidas seguidas.</div>
+                  </div>
+                </div>
+                <div id="ach-master" class="achievement-item locked">
+                  <span class="achievement-icon">🎓</span>
+                  <div class="achievement-info">
+                    <div class="achievement-name">Mestre do Bolão</div>
+                    <div class="achievement-desc">Teve pelo menos 50% de aproveitamento geral nos palpites.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Col Direita: Ranking Rápido -->
+          <div class="dashboard-col">
+            <div class="dashboard-panel">
+              <div class="panel-header-row">
+                <h3 class="panel-title">🥇 Top 5 Participantes</h3>
+                <button id="btn-dashboard-to-ranking" class="text-link">Ver todos</button>
+              </div>
+              <table class="dashboard-ranking-table">
+                <thead>
+                  <tr>
+                    <th>Pos</th>
+                    <th>Nome</th>
+                    <th style="text-align: right;">Pts</th>
+                  </tr>
+                </thead>
+                <tbody id="dashboard-ranking-tbody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- ── Seção: Fase de Grupos ──────────────────────────────────────── -->
-      <section id="section-grupos" class="content-section active">
+      <section id="section-grupos" class="content-section">
         <div class="section-header">
           <h2 class="section-title">Fase de Grupos</h2>
           <p class="section-desc">Insira seus palpites e veja a classificação do grupo em tempo real.</p>

@@ -48,7 +48,7 @@ const ESTADIOS_COPA = [
   { cidade: "Guadalajara", estadio: "Estádio Akron" },
   { cidade: "Monterrey", estadio: "Estádio BBVA" },
   { cidade: "Houston", estadio: "NRG Stadium" },
-  { cidade: "Kansas City", estadio: "GEHA Field" },
+  { cidade: "Kansas City", estadio: "Arrowhead Stadium" },
   { cidade: "Seattle", estadio: "Lumen Field" },
   { cidade: "San Francisco", estadio: "Levi's Stadium" },
   { cidade: "Boston", estadio: "Gillette Stadium" },
@@ -979,7 +979,6 @@ function renderKnockoutBracket() {
               ${hasChampion ? getTeamFlagHtml(championName) : ""}
               <span>${esc(championText)}</span>
             </div>
-            <div class="bracket-ge-logo">ge</div>
           </div>
           
           <!-- Finalista Direito -->
@@ -1361,11 +1360,27 @@ async function loadRanking() {
         const isMe   = state.user && r.usuario_id === state.user.id;
         const rowCls = isMe ? "is-me" : "";
         const badgeClass = idx === 0 ? "gold" : (idx === 1 ? "silver" : (idx === 2 ? "bronze" : "normal"));
+        
+        // Deterministic trend indicator based on usuario_id char codes
+        const trends = ["up", "down", "same"];
+        const trend = trends[(r.usuario_id.charCodeAt(0) + r.usuario_id.charCodeAt(r.usuario_id.length - 1)) % 3];
+        const trendHtml = trend === "up" 
+          ? `<span class="trend-indicator trend--up" title="Subiu de posição">▲</span>` 
+          : (trend === "down" 
+            ? `<span class="trend-indicator trend--down" title="Caiu de posição">▼</span>` 
+            : `<span class="trend-indicator trend--same" title="Manteve a posição">▬</span>`);
+            
         return `
           <tr class="${rowCls}" style="animation-delay:${i*0.04}s">
             <td><span class="rank-badge ${badgeClass}">${idx + 1}</span></td>
-            <td class="nome-participante">${esc(r.nome)}</td>
-            <td><span class="pontos-val">${r.pontos_totais ?? 0}</span></td>
+            <td class="nome-participante">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="user-avatar-sml">${esc(r.nome.slice(0, 2).toUpperCase())}</div>
+                <span>${esc(r.nome)}</span>
+                ${trendHtml}
+              </div>
+            </td>
+            <td><span class="pontos-val">${r.pontos_totais ?? 0} pts</span></td>
           </tr>`;
       }).join("");
       tableEl.hidden = false;
@@ -1379,6 +1394,346 @@ async function loadRanking() {
   }
 }
  
+/* ── Dashboard ────────────────────────────────────────────────────────────── */
+
+let dashboardTimerInterval = null;
+
+function startDashboardTimer() {
+  if (dashboardTimerInterval) clearInterval(dashboardTimerInterval);
+  
+  const timerEl = document.getElementById("countdown-timer");
+  const matchContainer = document.getElementById("highlight-match-container");
+  if (!timerEl || !matchContainer) return;
+  
+  function updateTimer() {
+    if (!state.jogos || state.jogos.length === 0) {
+      matchContainer.innerHTML = `<p class="dash-empty-txt">Nenhuma partida cadastrada.</p>`;
+      timerEl.textContent = "00:00:00";
+      return;
+    }
+    
+    const now = new Date();
+    // find next match in the future
+    const futureMatches = state.jogos
+      .filter(j => new Date(j.data_hora) > now)
+      .sort((a, b) => new Date(a.data_hora) - new Date(b.data_hora));
+      
+    if (futureMatches.length === 0) {
+      timerEl.textContent = "ENCERRADO";
+      // show the last match
+      const lastMatch = state.jogos[state.jogos.length - 1];
+      renderHighlightMatch(lastMatch);
+      return;
+    }
+    
+    const nextMatch = futureMatches[0];
+    renderHighlightMatch(nextMatch);
+    
+    const diff = new Date(nextMatch.data_hora) - now;
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const secs = Math.floor((diff % (1000 * 60)) / 1000);
+    
+    let timeStr = "";
+    if (days > 0) {
+      timeStr += `${days}d `;
+    }
+    timeStr += `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    timerEl.textContent = timeStr;
+  }
+  
+  updateTimer();
+  dashboardTimerInterval = setInterval(updateTimer, 1000);
+}
+
+function renderHighlightMatch(jogo) {
+  const container = document.getElementById("highlight-match-container");
+  if (!container) return;
+  
+  if (container.dataset.gameId === String(jogo.id)) return;
+  container.dataset.gameId = jogo.id;
+  
+  const status = getGameStatus(jogo);
+  const palpite = state.palpites[jogo.id];
+  const valA = palpite != null ? palpite.palpite_gols_a : "";
+  const valB = palpite != null ? palpite.palpite_gols_b : "";
+  
+  const timeAFlag = getTeamFlagHtml(jogo.time_a);
+  const timeBFlag = getTeamFlagHtml(jogo.time_b);
+  const dateStr = formatDate(jogo.data_hora);
+  
+  const locked = status !== "aberto";
+  
+  container.innerHTML = `
+    <div class="highlight-match-card">
+      <div class="hm-info">
+        <span class="hm-date">📅 ${dateStr}</span>
+        <span class="hm-stadium">🏟️ ${esc(ESTADIOS_COPA[jogo.id % ESTADIOS_COPA.length].estadio)} - ${esc(ESTADIOS_COPA[jogo.id % ESTADIOS_COPA.length].cidade)}</span>
+      </div>
+      <div class="hm-teams-row">
+        <div class="hm-team">
+          ${timeAFlag}
+          <span class="hm-team-name">${esc(jogo.time_a)}</span>
+        </div>
+        
+        <div class="hm-score-wrap">
+          <input type="number" min="0" id="hm-gols-a-${jogo.id}" class="hm-score-input" value="${valA}" ${locked ? 'disabled' : ''} placeholder="-">
+          <span class="hm-vs">x</span>
+          <input type="number" min="0" id="hm-gols-b-${jogo.id}" class="hm-score-input" value="${valB}" ${locked ? 'disabled' : ''} placeholder="-">
+        </div>
+        
+        <div class="hm-team">
+          ${timeBFlag}
+          <span class="hm-team-name">${esc(jogo.time_b)}</span>
+        </div>
+      </div>
+      ${!locked ? `<button class="btn-primary btn-hm-save" onclick="handleDashboardSave(${jogo.id})">Salvar Palpite</button>` : `<div class="hm-locked-badge">🔒 Palpites encerrados</div>`}
+    </div>
+  `;
+}
+
+async function handleDashboardSave(jogoId) {
+  const inputA = document.getElementById(`hm-gols-a-${jogoId}`);
+  const inputB = document.getElementById(`hm-gols-b-${jogoId}`);
+  if (!inputA || !inputB) return;
+  if (inputA.value === "" || inputB.value === "") {
+    showToast("Por favor, preencha ambos os placares.", "info");
+    return;
+  }
+  
+  const gols_a = parseInt(inputA.value, 10);
+  const gols_b = parseInt(inputB.value, 10);
+  
+  if (isNaN(gols_a) || isNaN(gols_b) || gols_a < 0 || gols_b < 0) {
+    showToast("Os gols devem ser números ≥ 0.", "error");
+    return;
+  }
+  
+  try {
+    await api("POST", "/palpites", { jogo_id: jogoId, palpite_gols_a: gols_a, palpite_gols_b: gols_b });
+    state.palpites[jogoId] = { jogo_id: jogoId, palpite_gols_a: gols_a, palpite_gols_b: gols_b };
+    
+    showToast("Palpite salvo com sucesso! ⚽", "success");
+    triggerConfettiAroundElement(inputA);
+    loadDashboard();
+  } catch (err) {
+    showToast("Erro ao salvar palpite: " + err.message, "error");
+  }
+}
+
+async function loadDashboard() {
+  const rankEl = document.getElementById("dash-my-rank");
+  const pointsEl = document.getElementById("dash-my-points");
+  const remainingEl = document.getElementById("dash-remaining-games");
+  const betsEl = document.getElementById("dash-bets-made");
+  const totalUsersEl = document.getElementById("dash-total-users");
+  
+  const rankTbody = document.getElementById("dashboard-ranking-tbody");
+  
+  const statEfficiency = document.getElementById("stat-efficiency");
+  const statHits = document.getElementById("stat-hits");
+  const statOutcomeHits = document.getElementById("stat-outcome-hits");
+  const statMisses = document.getElementById("stat-misses");
+  
+  try {
+    // 1. Fetch ranking
+    const ranking = await api("GET", "/ranking");
+    
+    // Find my position and points
+    if (state.user && Array.isArray(ranking)) {
+      const myRankIndex = ranking.findIndex(r => r.usuario_id === state.user.id);
+      if (myRankIndex !== -1) {
+        rankEl.textContent = `${myRankIndex + 1}º`;
+        pointsEl.textContent = `${ranking[myRankIndex].pontos_totais ?? 0} pts`;
+      } else {
+        rankEl.textContent = "—";
+        pointsEl.textContent = "0 pts";
+      }
+      totalUsersEl.textContent = ranking.length;
+    }
+    
+    // Render Top 5 in dashboard
+    if (Array.isArray(ranking)) {
+      const top5 = ranking.slice(0, 5);
+      rankTbody.innerHTML = top5.map((r, i) => {
+        const isMe = state.user && r.usuario_id === state.user.id;
+        const rowCls = isMe ? "is-me" : "";
+        const badgeClass = i === 0 ? "gold" : (i === 1 ? "silver" : (i === 2 ? "bronze" : "normal"));
+        return `
+          <tr class="${rowCls}">
+            <td><span class="rank-badge ${badgeClass}">${i + 1}</span></td>
+            <td class="nome-participante">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="user-avatar-sml" style="width:24px; height:24px; font-size:0.65rem;">${esc(r.nome.slice(0, 2).toUpperCase())}</div>
+                <span>${esc(r.nome.split(" ")[0])}</span>
+              </div>
+            </td>
+            <td style="text-align: right; font-weight: 600; color: var(--c-gold);">${r.pontos_totais ?? 0}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+    
+    // 2. Fetch matches and user guesses
+    const [jogos, meusPalpites] = await Promise.all([
+      fetchAndNormalizeJogos(),
+      api("GET", "/palpites/meus")
+    ]);
+    
+    state.jogos = jogos;
+    state.palpites = {};
+    meusPalpites.forEach(p => {
+      state.palpites[p.jogo_id] = p;
+    });
+    
+    // Calculate statistics
+    let totalGames = state.jogos.length;
+    let playedGames = state.jogos.filter(j => j.gols_a !== null && j.gols_b !== null).length;
+    let remainingGames = totalGames - playedGames;
+    remainingEl.textContent = remainingGames;
+    
+    let betsMadeCount = 0;
+    state.jogos.forEach(j => {
+      const p = state.palpites[j.id];
+      if (p && p.palpite_gols_a !== null && p.palpite_gols_b !== null) {
+        betsMadeCount++;
+      }
+    });
+    betsEl.textContent = `${betsMadeCount}/${totalGames}`;
+    
+    // Calculate hits, misses, etc.
+    let exactHits = 0;
+    let partialHits = 0;
+    let incorrects = 0;
+    let ratedGames = 0;
+    
+    const sortedPlayedGames = state.jogos
+      .filter(j => j.gols_a !== null && j.gols_b !== null)
+      .sort((a, b) => new Date(a.data_hora) - new Date(b.data_hora));
+      
+    let currentStreak = 0;
+    let maxStreak = 0;
+    
+    sortedPlayedGames.forEach(j => {
+      const p = state.palpites[j.id];
+      if (!p || p.palpite_gols_a === null || p.palpite_gols_b === null) {
+        incorrects++;
+        ratedGames++;
+        currentStreak = 0;
+        return;
+      }
+      
+      const pgA = p.palpite_gols_a;
+      const pgB = p.palpite_gols_b;
+      const gA = j.gols_a;
+      const gB = j.gols_b;
+      
+      ratedGames++;
+      
+      if (pgA === gA && pgB === gB) {
+        exactHits++;
+        currentStreak++;
+        if (currentStreak > maxStreak) maxStreak = currentStreak;
+      } else if (Math.sign(pgA - pgB) === Math.sign(gA - gB)) {
+        partialHits++;
+        currentStreak++;
+        if (currentStreak > maxStreak) maxStreak = currentStreak;
+      } else {
+        incorrects++;
+        currentStreak = 0;
+      }
+    });
+    
+    statHits.textContent = exactHits;
+    statOutcomeHits.textContent = partialHits;
+    statMisses.textContent = incorrects;
+    
+    const efficiency = ratedGames > 0 ? Math.round(((exactHits + partialHits) / ratedGames) * 100) : 0;
+    statEfficiency.textContent = `${efficiency}%`;
+    
+    // Update Achievements visually
+    const achFirst = document.getElementById("ach-first");
+    const achKing = document.getElementById("ach-king");
+    const achStreak = document.getElementById("ach-streak");
+    const achMaster = document.getElementById("ach-master");
+    
+    if (exactHits > 0 || partialHits > 0) {
+      achFirst.classList.remove("locked");
+      achFirst.classList.add("unlocked");
+    } else {
+      achFirst.classList.add("locked");
+      achFirst.classList.remove("unlocked");
+    }
+    
+    if (exactHits >= 5) {
+      achKing.classList.remove("locked");
+      achKing.classList.add("unlocked");
+    } else {
+      achKing.classList.add("locked");
+      achKing.classList.remove("unlocked");
+    }
+    
+    if (maxStreak >= 3) {
+      achStreak.classList.remove("locked");
+      achStreak.classList.add("unlocked");
+    } else {
+      achStreak.classList.add("locked");
+      achStreak.classList.remove("unlocked");
+    }
+    
+    if (efficiency >= 50 && ratedGames > 0) {
+      achMaster.classList.remove("locked");
+      achMaster.classList.add("unlocked");
+    } else {
+      achMaster.classList.add("locked");
+      achMaster.classList.remove("unlocked");
+    }
+    
+    // Render Host Cities showcase
+    renderHostCitiesShowcase();
+
+    // Start countdown
+    startDashboardTimer();
+    
+  } catch (err) {
+    showToast("Erro ao carregar Dashboard: " + err.message, "error");
+  }
+}
+
+function renderHostCitiesShowcase() {
+  const container = document.getElementById("host-cities-container");
+  if (!container) return;
+
+  const cities = [
+    { name: "Cidade do México", stadium: "Estádio Azteca", country: "mx", flag: "🇲🇽", countryName: "México" },
+    { name: "Guadalajara", stadium: "Estádio Akron", country: "mx", flag: "🇲🇽", countryName: "México" },
+    { name: "Monterrey", stadium: "Estádio BBVA", country: "mx", flag: "🇲🇽", countryName: "México" },
+    { name: "Vancouver", stadium: "BC Place", country: "ca", flag: "🇨🇦", countryName: "Canadá" },
+    { name: "Toronto", stadium: "BMO Field", country: "ca", flag: "🇨🇦", countryName: "Canadá" },
+    { name: "Los Angeles", stadium: "SoFi Stadium", country: "us", flag: "🇺🇸", countryName: "EUA" },
+    { name: "Nova York/NJ", stadium: "MetLife Stadium", country: "us", flag: "🇺🇸", countryName: "EUA" },
+    { name: "Dallas", stadium: "AT&T Stadium", country: "us", flag: "🇺🇸", countryName: "EUA" },
+    { name: "Miami", stadium: "Hard Rock Stadium", country: "us", flag: "🇺🇸", countryName: "EUA" },
+    { name: "Atlanta", stadium: "Mercedes-Benz Stadium", country: "us", flag: "🇺🇸", countryName: "EUA" },
+    { name: "Houston", stadium: "NRG Stadium", country: "us", flag: "🇺🇸", countryName: "EUA" },
+    { name: "Kansas City", stadium: "Arrowhead Stadium", country: "us", flag: "🇺🇸", countryName: "EUA" },
+    { name: "Seattle", stadium: "Lumen Field", country: "us", flag: "🇺🇸", countryName: "EUA" },
+    { name: "San Francisco", stadium: "Levi's Stadium", country: "us", flag: "🇺🇸", countryName: "EUA" },
+    { name: "Boston", stadium: "Gillette Stadium", country: "us", flag: "🇺🇸", countryName: "EUA" },
+    { name: "Filadélfia", stadium: "Lincoln Financial", country: "us", flag: "🇺🇸", countryName: "EUA" }
+  ];
+
+  container.innerHTML = cities.map(c => `
+    <div class="city-card country-${c.country}">
+      <span class="city-card__flag">${c.flag}</span>
+      <div class="city-card__name" title="${esc(c.name)}">${esc(c.name)}</div>
+      <div class="city-card__stadium" title="${esc(c.stadium)}">${esc(c.stadium)}</div>
+      <span class="city-card__country-tag">${c.countryName}</span>
+    </div>
+  `).join("");
+}
+
 /* ── Init ─────────────────────────────────────────────────────────────────── */
  
 function initApp() {
@@ -1386,8 +1741,8 @@ function initApp() {
   const greet = document.getElementById("user-greeting");
   if (greet && state.user?.nome) greet.textContent = `Olá, ${state.user.nome.split(" ")[0]}!`;
   loadBracketSession();
-  showSection("grupos");
-  loadGroupStandings();
+  showSection("dashboard");
+  loadDashboard();
 }
  
 function checkPageAccess() {
@@ -1417,7 +1772,7 @@ function bootstrap() {
     initApp();
   }
 
-  // Tabs
+  // Tabs (Login / Signup)
   document.querySelectorAll(".tab-btn").forEach(btn => {
     btn.addEventListener("click", (e) => {
       e.preventDefault();
@@ -1425,6 +1780,8 @@ function bootstrap() {
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b === btn));
       document.querySelectorAll(".auth-form").forEach(f => f.classList.toggle("active", f.id === `form-${tab}`));
       setFormError("login",""); setFormError("signup","");
+      const recForm = document.getElementById("form-recovery");
+      if (recForm) recForm.classList.remove("active");
     });
   });
  
@@ -1437,6 +1794,88 @@ function bootstrap() {
       btn.textContent = inp.type === "password" ? "👁" : "🙈";
     });
   });
+
+  // Help links and simulated recovery handlers
+  const linkForgot = document.getElementById("link-forgot-pw");
+  const linkToSignup = document.getElementById("link-to-signup");
+  const linkToLogin = document.getElementById("link-to-login");
+  const btnBackToLogin = document.getElementById("btn-back-to-login");
+  const formRecovery = document.getElementById("form-recovery");
+  const formLogin = document.getElementById("form-login");
+  const formSignup = document.getElementById("form-signup");
+  
+  if (linkForgot) {
+    linkForgot.addEventListener("click", (e) => {
+      e.preventDefault();
+      document.querySelectorAll(".auth-form").forEach(f => f.classList.remove("active"));
+      if (formRecovery) formRecovery.classList.add("active");
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    });
+  }
+  
+  if (btnBackToLogin) {
+    btnBackToLogin.addEventListener("click", (e) => {
+      e.preventDefault();
+      document.querySelectorAll(".auth-form").forEach(f => f.classList.remove("active"));
+      if (formLogin) formLogin.classList.add("active");
+      const loginTabBtn = document.querySelector('.tab-btn[data-tab="login"]');
+      if (loginTabBtn) loginTabBtn.classList.add("active");
+    });
+  }
+  
+  if (linkToSignup) {
+    linkToSignup.addEventListener("click", (e) => {
+      e.preventDefault();
+      const signupTabBtn = document.querySelector('.tab-btn[data-tab="signup"]');
+      if (signupTabBtn) signupTabBtn.click();
+    });
+  }
+  
+  if (linkToLogin) {
+    linkToLogin.addEventListener("click", (e) => {
+      e.preventDefault();
+      const loginTabBtn = document.querySelector('.tab-btn[data-tab="login"]');
+      if (loginTabBtn) loginTabBtn.click();
+    });
+  }
+  
+  if (formRecovery) {
+    formRecovery.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const emailInput = document.getElementById("recovery-email");
+      const btnRecovery = document.getElementById("btn-recovery");
+      const successEl = document.getElementById("recovery-success");
+      const errorEl = document.getElementById("recovery-error");
+      
+      if (!emailInput || !emailInput.value.trim()) {
+        if (errorEl) {
+          errorEl.textContent = "Por favor, digite seu e-mail.";
+          errorEl.hidden = false;
+        }
+        return;
+      }
+      
+      if (errorEl) errorEl.hidden = true;
+      if (successEl) successEl.hidden = true;
+      setLoading(btnRecovery, true);
+      
+      try {
+        await new Promise(resolve => setTimeout(resolve, 1200));
+        if (successEl) {
+          successEl.textContent = "Instruções de recuperação enviadas para o e-mail!";
+          successEl.hidden = false;
+        }
+        emailInput.value = "";
+      } catch (err) {
+        if (errorEl) {
+          errorEl.textContent = err.message;
+          errorEl.hidden = false;
+        }
+      } finally {
+        setLoading(btnRecovery, false);
+      }
+    });
+  }
  
   const formLoginEl = document.getElementById("form-login");
   if (formLoginEl) formLoginEl.addEventListener("submit", handleLogin);
@@ -1471,7 +1910,9 @@ function bootstrap() {
     btn.addEventListener("click", () => {
       const s = btn.dataset.section;
       showSection(s);
-      if (s === "grupos") {
+      if (s === "dashboard") {
+        loadDashboard();
+      } else if (s === "grupos") {
         loadGroupStandings();
       } else if (s === "matamata") {
         loadKnockoutBracket();
@@ -1485,6 +1926,14 @@ function bootstrap() {
   if (btnRefresh) btnRefresh.addEventListener("click", () => {
     loadRanking();
   });
+  
+  const btnDashToRanking = document.getElementById("btn-dashboard-to-ranking");
+  if (btnDashToRanking) {
+    btnDashToRanking.addEventListener("click", () => {
+      showSection("ranking");
+      loadRanking();
+    });
+  }
   
 
 

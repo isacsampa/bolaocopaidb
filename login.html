@@ -27,6 +27,9 @@
     </div>
 
     <div class="auth-container">
+      <div class="we-are-26-banner-wrap">
+        <span class="we-are-26-banner-text">#WEARE26</span>
+      </div>
       <button type="button" id="btn-theme-toggle" class="theme-toggle-btn" title="Alternar tema">🌙</button>
       <header class="auth-header">
         <div class="fwc-logo-main">
@@ -60,6 +63,10 @@
           <span class="btn-text">Entrar</span>
           <span class="btn-spinner" hidden></span>
         </button>
+        <div class="auth-helper-links">
+          <a href="#" id="link-forgot-pw" class="auth-link">Esqueceu sua senha?</a>
+          <p class="auth-switch-text">Não tem uma conta? <a href="#" id="link-to-signup" class="auth-link">Cadastre-se</a></p>
+        </div>
       </form>
 
       <!-- Form Signup -->
@@ -84,6 +91,24 @@
           <span class="btn-text">Criar conta</span>
           <span class="btn-spinner" hidden></span>
         </button>
+        <div class="auth-helper-links">
+          <p class="auth-switch-text">Já tem uma conta? <a href="#" id="link-to-login" class="auth-link">Entrar</a></p>
+        </div>
+      </form>
+
+      <!-- Form Recovery -->
+      <form id="form-recovery" class="auth-form" novalidate>
+        <div class="field-group">
+          <label for="recovery-email">E-mail para recuperação</label>
+          <input id="recovery-email" type="email" placeholder="seu@email.com" />
+        </div>
+        <div id="recovery-error" class="form-error" hidden></div>
+        <div id="recovery-success" class="form-success-alert" hidden></div>
+        <button type="submit" class="btn-primary" id="btn-recovery">
+          <span class="btn-text">Enviar Link</span>
+          <span class="btn-spinner" hidden></span>
+        </button>
+        <button type="button" id="btn-back-to-login" class="btn-secondary" style="margin-top: 0.5rem; justify-content: center; width: 100%;">Voltar para o Login</button>
       </form>
     </div>
 

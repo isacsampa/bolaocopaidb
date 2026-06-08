@@ -5,40 +5,47 @@
 
 /* ── Tokens ──────────────────────────────────────────────────────────────── */
 :root {
-  --c-bg:        #0b0e14;
-  --c-surface:   #13181f;
-  --c-surface2:  #1a2130;
-  --c-border:    #252d3a;
-  --c-border2:   #2e3a4a;
+  /* FWC 26 Base Minimal Colors */
+  --c-bg:        #060608;
+  --c-surface:   #111116;
+  --c-surface2:  #161620;
+  --c-border:    #22222e;
+  --c-border2:   #2b2b3a;
 
-  --c-gold:      #f5c842;
-  --c-gold-dim:  #c49a1a;
-  --c-gold-glow: rgba(245, 200, 66, 0.18);
+  /* Institutional gold for cup accents */
+  --c-gold:      #d4af37;
+  --c-gold-dim:  #a68015;
+  --c-gold-glow: rgba(212, 175, 55, 0.15);
 
-  --c-green:     #2dce7b;
-  --c-green-dim: rgba(45, 206, 123, 0.12);
+  /* Trionda Wave Accent Colors */
+  --c-green:     #009a44; /* Mexico Green */
+  --c-green-dim: rgba(0, 154, 68, 0.12);
 
-  --c-red:       #ff4d4d;
-  --c-red-dim:   rgba(255, 77, 77, 0.12);
+  --c-red:       #c8102e; /* Canada/USA Red */
+  --c-red-dim:   rgba(200, 16, 46, 0.12);
 
-  --c-blue:      #4d9fff;
-  --c-blue-dim:  rgba(77, 159, 255, 0.12);
+  --c-blue:      #002868; /* USA Blue */
+  --c-blue-dim:  rgba(0, 40, 104, 0.15);
 
-  --c-text:      #e8edf5;
-  --c-text-2:    #8a95a8;
-  --c-text-3:    #4f5b6b;
+  --c-white:     #ffffff;
+  --c-trionda-grad: linear-gradient(135deg, var(--c-green) 0%, var(--c-white) 40%, var(--c-red) 75%, var(--c-blue) 100%);
 
-  --radius-sm:   6px;
-  --radius-md:   12px;
-  --radius-lg:   20px;
+  --c-text:      #f5f7fa;
+  --c-text-2:    #9aa5b8;
+  --c-text-3:    #545e70;
 
-  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
-  --shadow-gold: 0 0 24px rgba(245, 200, 66, 0.15);
+  --radius-sm:   5px; /* Tighter geometric radius */
+  --radius-md:   10px;
+  --radius-lg:   16px;
 
-  --font-display: 'Bebas Neue', cursive;
-  --font-body:    'DM Sans', sans-serif;
+  --shadow-card: 0 4px 30px rgba(0, 0, 0, 0.6);
+  --shadow-gold: 0 0 30px rgba(212, 175, 55, 0.1);
 
-  --topbar-h: 60px;
+  /* FWC 26 Typefaces */
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body:    'Outfit', sans-serif;
+
+  --topbar-h: 64px;
   --nav-h:    56px;
 }
 
@@ -90,7 +97,7 @@ body {
   position: absolute;
   border-radius: 50%;
   filter: blur(120px);
-  opacity: 0.25;
+  opacity: 0.22;
   mix-blend-mode: screen;
   animation: float-orb 20s infinite alternate ease-in-out;
 }
@@ -98,28 +105,28 @@ body {
 .orb1 {
   top: -10%;
   left: -10%;
-  width: 50vw;
-  height: 50vw;
-  background: radial-gradient(circle, var(--c-gold) 0%, rgba(245, 200, 66, 0) 70%);
-  animation-duration: 25s;
+  width: 55vw;
+  height: 55vw;
+  background: radial-gradient(circle, var(--c-green) 0%, rgba(0, 154, 68, 0) 70%);
+  animation-duration: 22s;
 }
 
 .orb2 {
   bottom: -10%;
   right: -10%;
-  width: 60vw;
-  height: 60vw;
-  background: radial-gradient(circle, var(--c-green) 0%, rgba(45, 206, 123, 0) 70%);
-  animation-duration: 30s;
+  width: 65vw;
+  height: 65vw;
+  background: radial-gradient(circle, var(--c-red) 0%, rgba(200, 16, 46, 0) 70%);
+  animation-duration: 28s;
 }
 
 .orb3 {
-  top: 40%;
-  left: 30%;
-  width: 40vw;
-  height: 40vw;
-  background: radial-gradient(circle, var(--c-blue) 0%, rgba(77, 159, 255, 0) 70%);
-  animation-duration: 20s;
+  top: 35%;
+  left: 25%;
+  width: 45vw;
+  height: 45vw;
+  background: radial-gradient(circle, var(--c-blue) 0%, rgba(0, 40, 104, 0) 70%);
+  animation-duration: 18s;
 }
 
 .auth-bg__grid {
@@ -178,14 +185,87 @@ body {
   to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-.auth-trophy {
-  font-size: 3rem;
-  display: block;
-  animation: trophy-bounce 2.5s ease-in-out infinite;
+/* Logo FWC 26 */
+.fwc-logo-main {
+  position: relative;
+  width: 140px;
+  height: 200px;
+  margin: 0 auto 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
-@keyframes trophy-bounce {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-6px); }
+.fwc-logo-main__bg {
+  font-family: var(--font-display);
+  font-size: 8rem;
+  font-weight: 800;
+  line-height: 0.75;
+  color: var(--c-white);
+  text-align: center;
+  user-select: none;
+  letter-spacing: -0.05em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.fwc-logo-main__bg div {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.fwc-logo-main__trophy {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  height: 145px;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.7));
+  pointer-events: none;
+  animation: trophy-float 4s ease-in-out infinite;
+}
+
+@keyframes trophy-float {
+  0%, 100% { transform: translate(-50%, -52%); }
+  50%       { transform: translate(-50%, -48%); }
+}
+
+.fwc-logo-mini {
+  position: relative;
+  width: 32px;
+  height: 46px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 12px;
+}
+.fwc-logo-mini__bg {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 800;
+  line-height: 0.75;
+  color: var(--c-white);
+  letter-spacing: -0.05em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.fwc-logo-mini__bg div {
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.fwc-logo-mini__trophy {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  height: 34px;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
+  pointer-events: none;
 }
 .auth-title {
   font-family: var(--font-display);
@@ -296,19 +376,26 @@ body {
   gap: 8px;
   width: 100%;
   padding: 0.9rem;
-  background: var(--c-gold);
-  color: #000;
+  background: var(--c-trionda-grad);
+  background-size: 200% auto;
+  color: #ffffff;
   font-family: var(--font-display);
   font-size: 1.1rem;
   letter-spacing: 0.08em;
+  text-transform: uppercase;
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+  transition: all 0.3s ease;
   margin-top: 0.3rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
-.btn-primary:hover { background: #ffd740; box-shadow: 0 4px 20px rgba(245, 200, 66, 0.35); }
-.btn-primary:active { transform: scale(0.98); }
+.btn-primary:hover {
+  background-position: right center;
+  box-shadow: 0 6px 20px rgba(200, 16, 46, 0.25);
+  transform: translateY(-2px);
+}
+.btn-primary:active { transform: scale(0.98); transform: translateY(1px); }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .btn-spinner {
@@ -383,12 +470,11 @@ body {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 .topbar__brand { display: flex; align-items: center; gap: 0.6rem; }
-.topbar__trophy { font-size: 1.4rem; }
 .topbar__title {
   font-family: var(--font-display);
   font-size: 1.35rem;
   letter-spacing: 0.06em;
-  color: var(--c-gold);
+  color: var(--c-white);
 }
 .topbar__user {
   display: flex;
@@ -455,7 +541,7 @@ body {
 }
 .nav-btn:hover { color: var(--c-text); }
 .nav-btn.active {
-  color: var(--c-gold);
+  color: var(--c-white);
 }
 .nav-btn.active::after {
   content: "";
@@ -464,9 +550,9 @@ body {
   left: 1.25rem;
   right: 1.25rem;
   height: 3px;
-  background: var(--c-gold);
+  background: var(--c-trionda-grad);
   border-radius: 3px 3px 0 0;
-  box-shadow: 0 -2px 10px rgba(245, 200, 66, 0.4);
+  box-shadow: 0 -2px 12px rgba(200, 16, 46, 0.35);
 }
 .nav-icon { font-size: 1.1rem; }
 
@@ -1426,7 +1512,6 @@ body {
     gap: 0.5rem;
   }
   .topbar__brand { gap: 0.4rem; }
-  .topbar__trophy { font-size: 1.2rem; }
   .topbar__title { font-size: 1rem; letter-spacing: 0.03em; }
 
   .topbar__user { gap: 0.5rem; }

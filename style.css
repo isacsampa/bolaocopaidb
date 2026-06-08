@@ -604,6 +604,27 @@ body {
   color: var(--c-red);
   background: rgba(255, 77, 77, 0.05);
 }
+.btn-pub-link {
+  background: rgba(255, 204, 41, 0.05);
+  border: 1px solid rgba(255, 204, 41, 0.25);
+  border-radius: var(--radius-sm);
+  color: var(--c-gold);
+  font-size: 0.8rem;
+  padding: 0.4rem 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.btn-pub-link:hover { 
+  border-color: var(--c-gold); 
+  background: rgba(255, 204, 41, 0.15);
+  color: var(--c-gold);
+}
 
 /* Nav */
 .main-nav {
@@ -1689,6 +1710,7 @@ body {
   .topbar__user { gap: 0.5rem; }
   .user-greeting { display: none; }
   .btn-logout { padding: 0.35rem 0.6rem; font-size: 0.7rem; }
+  .btn-pub-link { padding: 0.35rem 0.6rem; font-size: 0.7rem; }
 
   /* Nav */
   .main-nav {

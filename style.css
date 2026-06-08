@@ -1678,6 +1678,7 @@ body {
   #app-screen { min-height: 100dvh; }
 
   .topbar {
+    position: relative;
     height: var(--topbar-h);
     padding: 0 0.75rem;
     gap: 0.5rem;
@@ -1691,6 +1692,9 @@ body {
 
   /* Nav */
   .main-nav {
+    position: sticky;
+    top: 0;
+    z-index: 99;
     height: var(--nav-h);
     padding: 0 0.5rem;
     gap: 0;

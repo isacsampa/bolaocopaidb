@@ -53,6 +53,7 @@
   --c-glass-border: rgba(255, 255, 255, 0.06);
   --c-input-bg: #0d0d12;
   --c-input-focus: rgba(212, 175, 55, 0.3);
+  --c-score-text: var(--c-gold);
 }
 
 [data-theme="light"] {
@@ -74,6 +75,7 @@
   --c-glass-border: rgba(15, 23, 42, 0.08);
   --c-input-bg: #f8fafc;
   --c-input-focus: rgba(0, 40, 104, 0.3);
+  --c-score-text: #92400e;
 }
 
 /* ── Reset & Base ─────────────────────────────────────────────────────────── */
@@ -193,16 +195,26 @@ body {
 .auth-header { text-align: center; margin-bottom: 2rem; }
 
 .auth-container {
+  /* Lock container and children to dark variables */
+  --c-surface:   #111116;
+  --c-surface2:  #161620;
+  --c-border:    #22222e;
+  --c-border2:   #2b2b3a;
+  --c-text:      #f5f7fa;
+  --c-text-2:    #9aa5b8;
+  --c-text-3:    #545e70;
+  --c-gold-glow: rgba(212, 175, 55, 0.15);
+
   position: relative;
   width: 100%;
   max-width: 460px;
-  background: var(--c-glass-bg);
+  background: rgba(17, 17, 22, 0.82);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--c-glass-border);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-lg);
   padding: 2.5rem 2rem;
-  box-shadow: var(--shadow-card);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
   animation: card-appear 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -236,7 +248,7 @@ body {
   to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-/* Logo FWC 26 - Collectible sticker card design */
+/* Logo FWC 26 - Reverted to transparent backdrop */
 .fwc-logo-main {
   position: relative;
   width: 140px;
@@ -245,50 +257,17 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #ffffff 0%, #f1f3f9 100%);
-  border: 4px solid #ffffff;
-  outline: 1px solid rgba(0, 0, 0, 0.12);
-  border-radius: var(--radius-md);
-  padding: 8px;
-  box-shadow: 
-    0 8px 24px rgba(0, 0, 0, 0.25),
-    0 0 15px rgba(212, 175, 55, 0.1);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  overflow: hidden;
-}
-.fwc-logo-main::after {
-  content: '';
-  position: absolute;
-  top: -150%;
-  left: -150%;
-  width: 300%;
-  height: 300%;
-  background: linear-gradient(
-    45deg,
-    transparent 45%,
-    rgba(255, 255, 255, 0.55) 48%,
-    rgba(212, 175, 55, 0.25) 50%,
-    rgba(255, 255, 255, 0.55) 52%,
-    transparent 55%
-  );
-  transform: rotate(-15deg);
-  transition: all 0.6s ease;
-  pointer-events: none;
-}
-.fwc-logo-main:hover::after {
-  top: -50%;
-  left: -50%;
+  animation: trophy-float 4s ease-in-out infinite;
 }
 .fwc-logo-main:hover {
-  transform: translateY(-3px) scale(1.03);
-  box-shadow: 
-    0 14px 30px rgba(0, 0, 0, 0.3),
-    0 0 25px rgba(212, 175, 55, 0.25);
+  transform: scale(1.05);
 }
 .fwc-logo-main__img {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.7));
 }
 
 .fwc-logo-mini {
@@ -299,11 +278,10 @@ body {
   justify-content: center;
   align-items: center;
   margin-right: 12px;
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
-  padding: 2px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+.fwc-logo-mini:hover {
+  transform: scale(1.08);
 }
 .fwc-logo-mini__img {
   width: 100%;
@@ -497,11 +475,18 @@ body {
 
 /* Topbar */
 .topbar {
+  /* Lock topbar to dark variables */
+  --c-border:    #22222e;
+  --c-border2:   #2b2b3a;
+  --c-text:      #f5f7fa;
+  --c-text-2:    #9aa5b8;
+  --c-text-3:    #545e70;
+
   height: var(--topbar-h);
-  background: var(--c-glass-bg);
+  background: rgba(19, 24, 31, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--c-glass-border);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -510,7 +495,7 @@ body {
   top: 0;
   z-index: 100;
   gap: 1rem;
-  box-shadow: var(--shadow-card);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
 
 .topbar-theme-toggle {
@@ -904,7 +889,7 @@ body {
   background: var(--c-surface);
   border: 1px solid var(--c-border2);
   border-radius: 4px;
-  color: var(--c-gold);
+  color: var(--c-score-text);
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
   appearance: textfield;

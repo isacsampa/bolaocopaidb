@@ -36,6 +36,25 @@ const GROUPS = {
   L: ["Inglaterra", "Croácia", "Gana", "Panamá"],
 };
 
+const ESTADIOS_COPA = [
+  { cidade: "Cidade do México", estadio: "Estádio Azteca" },
+  { cidade: "Los Angeles", estadio: "SoFi Stadium" },
+  { cidade: "Nova York/NJ", estadio: "MetLife Stadium" },
+  { cidade: "Dallas", estadio: "AT&T Stadium" },
+  { cidade: "Miami", estadio: "Hard Rock Stadium" },
+  { cidade: "Atlanta", estadio: "Mercedes-Benz Stadium" },
+  { cidade: "Vancouver", estadio: "BC Place" },
+  { cidade: "Toronto", estadio: "BMO Field" },
+  { cidade: "Guadalajara", estadio: "Estádio Akron" },
+  { cidade: "Monterrey", estadio: "Estádio BBVA" },
+  { cidade: "Houston", estadio: "NRG Stadium" },
+  { cidade: "Kansas City", estadio: "GEHA Field" },
+  { cidade: "Seattle", estadio: "Lumen Field" },
+  { cidade: "San Francisco", estadio: "Levi's Stadium" },
+  { cidade: "Boston", estadio: "Gillette Stadium" },
+  { cidade: "Filadélfia", estadio: "Lincoln Financial" }
+];
+
 const TEAM_FLAGS = {
   "México": "mx",
   "África do Sul": "za",
@@ -384,6 +403,52 @@ function formatDateShort(iso) {
 
 
 
+function triggerConfettiAroundElement(element) {
+  if (!element) return;
+  const rect = element.getBoundingClientRect();
+  const x = rect.left + rect.width / 2 + window.scrollX;
+  const y = rect.top + rect.height / 2 + window.scrollY;
+  
+  const colors = ["#009a44", "#c8102e", "#002868", "#d4af37", "#ffffff"];
+  const container = document.createElement("div");
+  container.style.position = "absolute";
+  container.style.left = "0";
+  container.style.top = "0";
+  container.style.width = "100%";
+  container.style.height = "100%";
+  container.style.pointerEvents = "none";
+  container.style.zIndex = "9999";
+  document.body.appendChild(container);
+  
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement("div");
+    p.style.position = "absolute";
+    p.style.left = `${x}px`;
+    p.style.top = `${y}px`;
+    p.style.width = `${Math.random() * 6 + 6}px`;
+    p.style.height = `${Math.random() * 6 + 6}px`;
+    p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    p.style.borderRadius = Math.random() > 0.5 ? "50%" : "2px";
+    p.style.transition = "transform 1s cubic-bezier(0.1, 0.8, 0.3, 1), opacity 1s ease";
+    
+    container.appendChild(p);
+    
+    const angle = Math.random() * Math.PI * 2;
+    const distance = Math.random() * 60 + 40;
+    const tx = Math.cos(angle) * distance;
+    const ty = Math.sin(angle) * distance;
+    
+    setTimeout(() => {
+      p.style.transform = `translate(${tx}px, ${ty}px) rotate(${Math.random() * 360}deg)`;
+      p.style.opacity = "0";
+    }, 10);
+  }
+  
+  setTimeout(() => {
+    container.remove();
+  }, 1100);
+}
+
 async function handleGroupGameAutoSave(jogoId) {
   const inputA = document.getElementById(`group-gols-a-${jogoId}`);
   const inputB = document.getElementById(`group-gols-b-${jogoId}`);
@@ -404,6 +469,7 @@ async function handleGroupGameAutoSave(jogoId) {
     state.palpites[jogoId] = { jogo_id: jogoId, palpite_gols_a: gols_a, palpite_gols_b: gols_b };
     
     showToast("Palpite salvo com sucesso! ⚽", "success");
+    triggerConfettiAroundElement(inputA);
     renderGroupStandings();
   } catch (err) {
     showToast("Erro ao salvar palpite: " + err.message, "error");
@@ -445,6 +511,7 @@ function renderGroupStandings() {
       const valB = palpite != null ? palpite.palpite_gols_b : "";
       
       const round = Math.floor(index / 2) + 1;
+      const estadioInfo = ESTADIOS_COPA[jogo.id % ESTADIOS_COPA.length];
       
       if (index % 2 === 0) {
         matchesHtml += `<div class="group-round-title">${round}ª Rodada</div>`;
@@ -452,19 +519,33 @@ function renderGroupStandings() {
       
       matchesHtml += `
         <div class="group-match-row round-${round} ${status}">
-          <span class="group-match-date">${formatDateShort(jogo.data_hora)}</span>
-          <div class="group-match-teams">
-            <span class="team-lbl right-align" style="display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px;">${esc(jogo.time_a)} ${getTeamFlagHtml(jogo.time_a)}</span>
-            <input type="number" min="0" max="99" class="group-score-input"
-              id="group-gols-a-${jogo.id}" data-jogo-id="${jogo.id}" value="${valA}" placeholder="0"
-              ${locked ? "disabled" : ""} />
-            <span class="vs">x</span>
-            <input type="number" min="0" max="99" class="group-score-input"
-              id="group-gols-b-${jogo.id}" data-jogo-id="${jogo.id}" value="${valB}" placeholder="0"
-              ${locked ? "disabled" : ""} />
-            <span class="team-lbl left-align" style="display: inline-flex; align-items: center; justify-content: flex-start; gap: 6px;">${getTeamFlagHtml(jogo.time_b)} ${esc(jogo.time_b)}</span>
+          <div class="ticket-notch notch-l"></div>
+          <div class="ticket-notch notch-r"></div>
+          <div class="ticket-stub">
+            <span class="group-match-date">${formatDateShort(jogo.data_hora)}</span>
+            <div class="ticket-barcode"></div>
           </div>
-          ${locked ? `<span class="locked-icon" title="Jogo encerrado ou em andamento">🔒</span>` : ""}
+          <div class="ticket-body">
+            <div class="ticket-venue">
+              📍 ${estadioInfo.estadio} — ${estadioInfo.cidade}
+            </div>
+            <div class="group-match-teams">
+              <span class="team-lbl right-align" style="display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px;">
+                ${esc(jogo.time_a)} ${getTeamFlagHtml(jogo.time_a)}
+              </span>
+              <input type="number" min="0" max="99" class="group-score-input"
+                id="group-gols-a-${jogo.id}" data-jogo-id="${jogo.id}" value="${valA}" placeholder="0"
+                ${locked ? "disabled" : ""} />
+              <span class="vs">x</span>
+              <input type="number" min="0" max="99" class="group-score-input"
+                id="group-gols-b-${jogo.id}" data-jogo-id="${jogo.id}" value="${valB}" placeholder="0"
+                ${locked ? "disabled" : ""} />
+              <span class="team-lbl left-align" style="display: inline-flex; align-items: center; justify-content: flex-start; gap: 6px;">
+                ${getTeamFlagHtml(jogo.time_b)} ${esc(jogo.time_b)}
+              </span>
+            </div>
+            ${locked ? `<span class="locked-icon" title="Jogo encerrado ou em andamento">🔒</span>` : ""}
+          </div>
         </div>
       `;
     });
@@ -1363,6 +1444,28 @@ function bootstrap() {
   if (formSignupEl) formSignupEl.addEventListener("submit", handleSignup);
   const btnLogoutEl = document.getElementById("btn-logout");
   if (btnLogoutEl) btnLogoutEl.addEventListener("click", handleLogout);
+ 
+  // Alternar tema
+  const btnThemeToggle = document.getElementById("btn-theme-toggle");
+  if (btnThemeToggle) {
+    const currentTheme = document.documentElement.getAttribute("data-theme") || "dark";
+    btnThemeToggle.textContent = currentTheme === "light" ? "🌙" : "☀️";
+    btnThemeToggle.title = currentTheme === "light" ? "Mudar para modo escuro" : "Mudar para modo claro";
+    
+    btnThemeToggle.addEventListener("click", () => {
+      const theme = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", theme);
+      localStorage.setItem("bolao-theme", theme);
+      btnThemeToggle.textContent = theme === "light" ? "🌙" : "☀️";
+      btnThemeToggle.title = theme === "light" ? "Mudar para modo escuro" : "Mudar para modo claro";
+      showToast(`Modo ${theme === "light" ? "claro" : "escuro"} ativado! 🎨`, "info", 2000);
+      
+      const isMataMataActive = document.getElementById("section-matamata")?.classList.contains("active");
+      if (isMataMataActive) {
+        setTimeout(drawBracketLines, 50);
+      }
+    });
+  }
  
   document.querySelectorAll(".nav-btn").forEach(btn => {
     btn.addEventListener("click", () => {

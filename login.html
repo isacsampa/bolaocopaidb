@@ -8,6 +8,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css?v=2" />
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('bolao-theme');
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme || systemTheme);
+    })();
+  </script>
 </head>
 <body>
   <div id="auth-screen" class="screen active">
@@ -20,6 +27,7 @@
     </div>
 
     <div class="auth-container">
+      <button type="button" id="btn-theme-toggle" class="theme-toggle-btn" title="Alternar tema">🌙</button>
       <header class="auth-header">
         <div class="fwc-logo-main">
           <img class="fwc-logo-main__img" src="logo%20fifa.png?v=3" alt="Copa do Mundo 2026" />

@@ -8,6 +8,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css?v=2" />
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('bolao-theme');
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme || systemTheme);
+    })();
+  </script>
 </head>
 <body>
   <div id="app-screen" class="screen active">
@@ -21,6 +28,7 @@
         <span class="topbar__title">BOLÃO COPA 2026</span>
       </div>
       <div class="topbar__user">
+        <button id="btn-theme-toggle" class="topbar-theme-toggle" title="Alternar tema">🌙</button>
         <span id="user-greeting" class="user-greeting"></span>
         <button id="btn-logout" class="btn-logout" title="Sair">↩ Sair</button>
       </div>

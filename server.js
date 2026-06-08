@@ -326,6 +326,49 @@ app.get("/api/palpites/meus", async (req, res) => {
   return res.status(200).json(data);
 });
 
+// ─── ROTA PÚBLICA DE PALPITES ──────────────────────────────────────────────────
+
+/**
+ * GET /api/palpites/publicos
+ * Retorna todos os palpites de todos os participantes, com nome do usuário e dados do jogo.
+ * Rota pública — sem autenticação. Expõe somente dados necessários para rivalização.
+ */
+app.get("/api/palpites/publicos", async (_req, res) => {
+  // Busca todos os palpites com join nas tabelas perfis e jogos
+  const { data, error } = await supabase
+    .from("palpites")
+    .select(`
+      usuario_id,
+      jogo_id,
+      palpite_gols_a,
+      palpite_gols_b,
+      perfis ( nome ),
+      jogos ( id, time_a, time_b, gols_a, gols_b, data_hora )
+    `)
+    .order("jogo_id", { ascending: true });
+
+  if (error) {
+    console.error("Erro ao buscar palpites públicos:", error.message);
+    return res.status(500).json({ error: "Erro ao buscar palpites." });
+  }
+
+  // Formata a resposta de forma limpa para o frontend
+  const formatted = (data || []).map((p) => ({
+    usuario_id:      p.usuario_id,
+    nome:            p.perfis?.nome || "Participante",
+    jogo_id:         p.jogo_id,
+    time_a:          p.jogos?.time_a || "—",
+    time_b:          p.jogos?.time_b || "—",
+    data_hora:       p.jogos?.data_hora || null,
+    gols_a:          p.jogos?.gols_a,   // resultado real (null se ainda não jogou)
+    gols_b:          p.jogos?.gols_b,
+    palpite_gols_a:  p.palpite_gols_a,
+    palpite_gols_b:  p.palpite_gols_b,
+  }));
+
+  return res.status(200).json(formatted);
+});
+
 // ─── ROTAS DE RANKING ──────────────────────────────────────────────────────────
 
 /**

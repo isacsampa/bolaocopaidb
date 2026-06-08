@@ -447,7 +447,8 @@ body {
   padding: 0.9rem;
   background: var(--c-trionda-grad);
   background-size: 200% auto;
-  color: #ffffff;
+  color: #111827;
+  font-weight: 800;
   font-family: var(--font-display);
   font-size: 1.1rem;
   letter-spacing: 0.08em;

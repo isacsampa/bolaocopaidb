@@ -436,6 +436,105 @@
     .leg-dot.miss    { background:#f26a6a; }
     .leg-dot.pending { background:var(--c-text-3); }
 
+    /* ── Invite Box (Hero Convite) ───────────────────── */
+    .pub-invite-box {
+      max-width: 620px;
+      margin: 1.75rem auto 1.5rem;
+      background: linear-gradient(135deg, rgba(0, 104, 71, 0.12) 0%, rgba(25, 32, 42, 0.45) 100%);
+      border: 1px solid rgba(0, 104, 71, 0.35);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+    }
+    .pub-invite-box::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      background: var(--c-trionda-grad);
+    }
+    .invite-tag {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 800;
+      color: var(--c-gold);
+      letter-spacing: 0.1em;
+      margin-bottom: 0.6rem;
+      background: rgba(255, 204, 41, 0.08);
+      border: 1px solid rgba(255, 204, 41, 0.2);
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    .invite-title {
+      font-family: var(--font-display);
+      font-size: clamp(1rem, 4vw, 1.25rem);
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.02em;
+    }
+    .invite-desc {
+      font-size: clamp(0.74rem, 2.8vw, 0.82rem);
+      color: var(--c-text-2);
+      line-height: 1.5;
+      margin-bottom: 1.1rem;
+      max-width: 520px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ── Guide Section (Como Participar) ──────────────── */
+    .pub-guide-section {
+      margin-bottom: 2.5rem;
+    }
+    .pub-guide-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+    .pub-guide-card {
+      background: var(--c-glass-bg);
+      border: 1px solid var(--c-glass-border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+      transition: transform .2s ease;
+    }
+    .pub-guide-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,204,41,.3);
+    }
+    .pg-step {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #006847 0%, #009a6a 100%);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 800;
+      margin-bottom: 0.75rem;
+    }
+    .pg-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--c-text);
+      margin-bottom: 0.5rem;
+    }
+    .pg-text {
+      font-size: 0.78rem;
+      color: var(--c-text-2);
+      line-height: 1.45;
+    }
+
     /* Responsive */
     /* ═══════════════════════════════════════
        RESPONSIVE BREAKPOINTS
@@ -445,6 +544,7 @@
     @media(max-width:768px){
       .pub-wrap { padding: 0 .9rem 3rem; }
       .pub-stats { gap: .6rem; }
+      .pub-guide-grid { gap: .75rem; }
       .palpites-inner { padding: 1rem 1.1rem 1.2rem; }
       .palpites-grid { grid-template-columns: repeat(auto-fill, minmax(170px,1fr)); gap:.5rem; }
       .pub-sh__title small { display:inline; }
@@ -452,6 +552,7 @@
 
     /* Mobile (≤600px) */
     @media(max-width:600px){
+      .pub-guide-grid { grid-template-columns: 1fr; gap: .65rem; }
       /* topbar */
       .topbar__title { font-size: .82rem; }
       .fwc-logo-mini { width:32px;height:32px; }
@@ -546,9 +647,15 @@
     <div class="pub-live-badge">🔴 ao vivo</div>
     <h1 class="pub-hero__title">Classificação Geral</h1>
     <p class="pub-hero__sub">Veja a pontuação e os palpites de cada participante — toque em qualquer nome para revelar as apostas e criar rivalidade! ⚔️</p>
-    <div class="pub-cta-row">
-      <a href="login.html" class="btn-pub-primary">⚽ Fazer meus Palpites</a>
-      <button onclick="refresh(true)" class="btn-pub-ghost">↻ Atualizar</button>
+    <!-- Bloco de Convite e Engajamento Premium -->
+    <div class="pub-invite-box">
+      <span class="invite-tag">🏆 Participe do Bolão</span>
+      <h2 class="invite-title">Faça parte do Bolão Oficial da Copa 2026!</h2>
+      <p class="invite-desc">Quer entrar na brincadeira? Cadastre-se agora mesmo para registrar seus palpites nos jogos, somar pontos no ranking e disputar o pódio com a galera!</p>
+      <div class="pub-cta-row" style="margin-top: 1rem; padding: 0;">
+        <a href="login.html" class="btn-pub-primary" style="box-shadow: 0 0 20px rgba(255, 204, 41, 0.25);">⚽ Fazer meus Palpites</a>
+        <button onclick="refresh(true)" class="btn-pub-ghost">↻ Atualizar Tabela</button>
+      </div>
     </div>
     <div class="pub-refresh-note"><span class="dot"></span>Atualiza automaticamente a cada 60s</div>
   </section>
@@ -582,6 +689,30 @@
     <div id="pub-empty" class="pub-empty" hidden>
       <span class="ei">📊</span>
       <p>Nenhuma pontuação registrada ainda. Volte em breve!</p>
+    </div>
+
+    <!-- Como Cadastrar Palpites -->
+    <div class="pub-guide-section">
+      <div class="pub-sh" style="margin-bottom:1rem;">
+        <span class="pub-sh__title">🎮 Como cadastrar seus palpites?</span>
+      </div>
+      <div class="pub-guide-grid">
+        <div class="pub-guide-card">
+          <div class="pg-step">1</div>
+          <h3 class="pg-title">Crie sua Conta</h3>
+          <p class="pg-text">Clique no botão <strong>⚽ Acessar</strong> no topo (ou "Fazer meus Palpites") e cadastre-se rapidamente.</p>
+        </div>
+        <div class="pub-guide-card">
+          <div class="pg-step">2</div>
+          <h3 class="pg-title">Digite seus Palpites</h3>
+          <p class="pg-text">Acesse as abas <strong>Fase de Grupos</strong> e <strong>Mata-Mata</strong> e digite os placares previstos.</p>
+        </div>
+        <div class="pub-guide-card">
+          <div class="pg-step">3</div>
+          <h3 class="pg-title">Salvamento Automático</h3>
+          <p class="pg-text">Pronto! Os palpites são salvos <strong>automaticamente</strong> no banco de dados. Agora é só secar os rivais!</p>
+        </div>
+      </div>
     </div>
 
     <!-- Podium -->

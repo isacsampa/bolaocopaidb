@@ -195,25 +195,10 @@ body {
   justify-content: center;
   align-items: center;
 }
-.fwc-logo-main__bg {
-  font-family: var(--font-display);
-  font-size: 8rem;
-  font-weight: 800;
-  line-height: 0.75;
-  color: var(--c-white);
-  text-align: center;
-  user-select: none;
-  letter-spacing: -0.05em;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-.fwc-logo-main__bg div {
-  height: 80px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.fwc-logo-main__bg-svg {
+  width: 100%;
+  height: 100%;
+  fill: var(--c-white);
 }
 .fwc-logo-main__trophy {
   position: absolute;
@@ -240,23 +225,10 @@ body {
   align-items: center;
   margin-right: 12px;
 }
-.fwc-logo-mini__bg {
-  font-family: var(--font-display);
-  font-size: 1.8rem;
-  font-weight: 800;
-  line-height: 0.75;
-  color: var(--c-white);
-  letter-spacing: -0.05em;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-.fwc-logo-mini__bg div {
-  height: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.fwc-logo-mini__bg-svg {
+  width: 100%;
+  height: 100%;
+  fill: var(--c-white);
 }
 .fwc-logo-mini__trophy {
   position: absolute;

@@ -189,7 +189,7 @@ body {
 .fwc-logo-main {
   position: relative;
   width: 140px;
-  height: 200px;
+  height: 230px;
   margin: 0 auto 1.5rem;
   display: flex;
   justify-content: center;
@@ -202,10 +202,10 @@ body {
 }
 .fwc-logo-main__trophy {
   position: absolute;
-  top: 50%;
+  top: 48%;
   left: 50%;
   transform: translate(-50%, -50%);
-  height: 145px;
+  height: 175px;
   filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.7));
   pointer-events: none;
   animation: trophy-float 4s ease-in-out infinite;
@@ -219,7 +219,7 @@ body {
 .fwc-logo-mini {
   position: relative;
   width: 32px;
-  height: 46px;
+  height: 52px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -232,10 +232,10 @@ body {
 }
 .fwc-logo-mini__trophy {
   position: absolute;
-  top: 50%;
+  top: 48%;
   left: 50%;
   transform: translate(-50%, -50%);
-  height: 34px;
+  height: 40px;
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
   pointer-events: none;
 }

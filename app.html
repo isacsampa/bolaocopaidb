@@ -19,27 +19,27 @@
           <svg class="fwc-logo-mini__bg-svg" viewBox="0 0 100 164" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <mask id="fwc-26-mask-mini">
+                <!-- Everything white is visible -->
                 <rect x="-10" y="-10" width="120" height="184" fill="#ffffff" />
+                <!-- Left waist slit -->
                 <rect x="-5" y="35" width="60" height="10" fill="#000000" />
+                <!-- Pill cutout in '2' loop -->
                 <rect x="34" y="14" width="32" height="12" fill="#000000" rx="6" />
+                <!-- Right waist slit -->
                 <rect x="45" y="119" width="60" height="10" fill="#000000" />
-                <rect x="34" y="138" width="32" height="12" fill="#000000" rx="6" />
+                <!-- 'FIFA' cutout in '6' loop -->
+                <text x="50" y="145" font-family="'Arial Black', Arial, sans-serif" font-weight="900" font-size="15" fill="#000000" text-anchor="middle" letter-spacing="0.5">FIFA</text>
               </mask>
             </defs>
+            <!-- Draw '2' and '6' shapes using the mask -->
             <g mask="url(#fwc-26-mask-mini)" fill="#ffffff">
-              <rect x="0" y="0" width="100" height="80" rx="32" />
-              <rect x="0" y="84" width="100" height="80" rx="32" />
+              <!-- Geometric 2 -->
+              <path d="M 0,80 L 100,80 L 100,50 A 50,50 0 0,0 0,50 Z" />
+              <!-- Geometric 6 -->
+              <path d="M 100,84 L 0,84 L 0,114 A 50,50 0 0,1 100,114 Z" />
             </g>
           </svg>
-          <svg class="fwc-logo-mini__trophy" viewBox="0 0 100 240" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M30,220 L70,220 L65,200 L35,200 Z" fill="#ffffff" />
-            <path d="M35,200 L65,200 L62,185 L38,185 Z" fill="#ffffff" />
-            <path d="M42,185 L58,185 L55,130 L45,130 Z" fill="#ffffff" />
-            <circle cx="50" cy="90" r="28" fill="#ffffff" />
-            <path d="M35,130 C35,145 42,165 50,165 C58,165 65,145 65,130 C65,115 50,110 50,90 C50,110 35,115 35,130 Z" fill="#ffffff" />
-            <path d="M38,135 C38,105 45,95 48,65 C43,68 32,80 32,105 C32,130 40,150 48,155 C42,150 38,140 38,135 Z" fill="#ffffff" />
-            <path d="M62,135 C62,105 55,95 52,65 C57,68 68,80 68,105 C68,130 60,150 52,155 C58,150 62,140 62,135 Z" fill="#ffffff" />
-          </svg>
+          <img class="fwc-logo-mini__trophy" src="fifa_trophy.png" alt="Trophy" />
         </div>
         <span class="topbar__title">BOLÃO COPA 2026</span>
       </div>

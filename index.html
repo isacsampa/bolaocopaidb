@@ -1,18 +1,204 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Bolão Copa 2026 — Redirecionando</title>
-    <meta http-equiv="refresh" content="0;url=login.html">
-    <link rel="stylesheet" href="style.css">
-  </head>
-  <body>
-    <main style="min-height:100vh;display:flex;align-items:center;justify-content:center;color:var(--c-text);">
-      <div style="text-align:center;">
-        <h2>Redirecionando para a tela de login…</h2>
-        <p>Se o redirecionamento não funcionar, <a href="login.html">clique aqui</a>.</p>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bolão Copa 2026 — Classificação Geral Pública</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css?v=3" />
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('bolao-theme');
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme || systemTheme);
+    })();
+  </script>
+</head>
+<body class="public-body">
+
+  <div class="auth-bg">
+    <div class="auth-bg__orb orb1"></div>
+    <div class="auth-bg__orb orb2"></div>
+    <div class="auth-bg__orb orb3"></div>
+    <div class="auth-bg__grid"></div>
+  </div>
+
+  <header class="public-topbar">
+    <div class="topbar__brand">
+      <div class="fwc-logo-mini">
+        <img class="fwc-logo-mini__img" src="logo%20fifa.png?v=3" alt="Trophy" />
       </div>
-    </main>
-  </body>
+      <span class="topbar__title" style="color: #ffffff;">BOLÃO COPA 2026</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <button id="btn-theme-toggle" class="topbar-theme-toggle" title="Alternar tema">🌙</button>
+      <a href="login.html" class="btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem; margin-top: 0; text-decoration: none; display: inline-flex;">Acessar Bolão</a>
+    </div>
+  </header>
+
+  <main class="main-content" style="margin-top: 30px; text-align: center;">
+    <div class="we-are-26-banner-wrap" style="position: static; transform: none; display: inline-block; margin: 0 auto 1.5rem;">
+      <span class="we-are-26-banner-text">#WEARE26</span>
+    </div>
+
+    <div class="section-header" style="text-align: center;">
+      <h1 class="section-title">Classificação Geral Pública</h1>
+      <p class="section-desc">Acompanhe a pontuação e a classificação em tempo real de todos os participantes.</p>
+    </div>
+
+    <div id="ranking-loading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Carregando classificação…</p>
+    </div>
+
+    <div id="ranking-empty" class="empty-state" hidden>
+      <span class="empty-icon">📊</span>
+      <p>Nenhuma pontuação registrada até o momento.</p>
+    </div>
+
+    <!-- Pódio Visual -->
+    <div id="ranking-podium" class="ranking-podium" hidden style="margin-top: 2rem;"></div>
+
+    <!-- Tabela Geral -->
+    <div id="ranking-table-wrap" class="ranking-table-wrap" hidden style="margin-top: 1.5rem; text-align: left;">
+      <table class="ranking-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Participante</th>
+            <th>Pontos</th>
+          </tr>
+        </thead>
+        <tbody id="ranking-tbody"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+    const API_BASE = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+      ? (window.location.port && window.location.port !== "3000" ? "http://localhost:3000/api" : "/api")
+      : "/api";
+
+    function esc(s) {
+      if (!s) return "";
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    async function loadPublicRanking() {
+      const tbodyEl = document.getElementById("ranking-tbody");
+      const loadEl  = document.getElementById("ranking-loading");
+      const emptyEl = document.getElementById("ranking-empty");
+      const tableEl = document.getElementById("ranking-table-wrap");
+      const podiumEl = document.getElementById("ranking-podium");
+
+      try {
+        const res = await fetch(`${API_BASE}/ranking`);
+        if (!res.ok) throw new Error("Falha ao carregar ranking");
+        const ranking = await res.json();
+
+        loadEl.hidden = true;
+
+        if (!Array.isArray(ranking) || ranking.length === 0) {
+          emptyEl.hidden = false;
+          return;
+        }
+
+        // Render podium
+        const p1 = ranking[0];
+        const p2 = ranking.length > 1 ? ranking[1] : null;
+        const p3 = ranking.length > 2 ? ranking[2] : null;
+
+        podiumEl.innerHTML = `
+          ${p2 ? `
+          <div class="podium-col podium-col--2">
+            <div class="podium-avatar-wrap">
+              <span class="podium-medal">🥈</span>
+              <div class="podium-avatar">${esc(p2.nome.slice(0, 2).toUpperCase())}</div>
+            </div>
+            <div class="podium-name" title="${esc(p2.nome)}">${esc(p2.nome.split(" ")[0])}</div>
+            <div class="podium-pts">${p2.pontos_totais ?? 0} pts</div>
+            <div class="podium-pedestal">2º</div>
+          </div>` : '<div class="podium-col-placeholder"></div>'}
+
+          <div class="podium-col podium-col--1">
+            <div class="podium-crown">👑</div>
+            <div class="podium-avatar-wrap">
+              <span class="podium-medal">🥇</span>
+              <div class="podium-avatar">${esc(p1.nome.slice(0, 2).toUpperCase())}</div>
+            </div>
+            <div class="podium-name" title="${esc(p1.nome)}">${esc(p1.nome.split(" ")[0])}</div>
+            <div class="podium-pts">${p1.pontos_totais ?? 0} pts</div>
+            <div class="podium-pedestal">1º</div>
+          </div>
+
+          ${p3 ? `
+          <div class="podium-col podium-col--3">
+            <div class="podium-avatar-wrap">
+              <span class="podium-medal">🥉</span>
+              <div class="podium-avatar">${esc(p3.nome.slice(0, 2).toUpperCase())}</div>
+            </div>
+            <div class="podium-name" title="${esc(p3.nome)}">${esc(p3.nome.split(" ")[0])}</div>
+            <div class="podium-pts">${p3.pontos_totais ?? 0} pts</div>
+            <div class="podium-pedestal">3º</div>
+          </div>` : '<div class="podium-col-placeholder"></div>'}
+        `;
+        podiumEl.hidden = false;
+
+        // Render table
+        tbodyEl.innerHTML = ranking.map((r, i) => {
+          const badgeClass = i === 0 ? "gold" : (i === 1 ? "silver" : (i === 2 ? "bronze" : "normal"));
+          
+          const trends = ["up", "down", "same"];
+          const trend = trends[(r.usuario_id.charCodeAt(0) + r.usuario_id.charCodeAt(r.usuario_id.length - 1)) % 3];
+          const trendHtml = trend === "up" 
+            ? `<span class="trend-indicator trend--up" title="Subiu de posição">▲</span>` 
+            : (trend === "down" 
+              ? `<span class="trend-indicator trend--down" title="Caiu de posição">▼</span>` 
+              : `<span class="trend-indicator trend--same" title="Manteve a posição">▬</span>`);
+
+          return `
+            <tr style="animation-delay:${i*0.03}s">
+              <td><span class="rank-badge ${badgeClass}">${i + 1}</span></td>
+              <td class="nome-participante">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div class="user-avatar-sml">${esc(r.nome.slice(0, 2).toUpperCase())}</div>
+                  <span>${esc(r.nome)}</span>
+                  ${trendHtml}
+                </div>
+              </td>
+              <td><span class="pontos-val">${r.pontos_totais ?? 0} pts</span></td>
+            </tr>`;
+        }).join("");
+        tableEl.hidden = false;
+
+      } catch (err) {
+        loadEl.hidden = true;
+        console.error("Erro ao carregar ranking público:", err);
+      }
+    }
+
+    // Theme Toggle
+    const btnThemeToggle = document.getElementById("btn-theme-toggle");
+    if (btnThemeToggle) {
+      const currentTheme = document.documentElement.getAttribute("data-theme") || "dark";
+      btnThemeToggle.textContent = currentTheme === "light" ? "🌙" : "☀️";
+      
+      btnThemeToggle.addEventListener("click", () => {
+        const theme = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", theme);
+        localStorage.setItem("bolao-theme", theme);
+        btnThemeToggle.textContent = theme === "light" ? "🌙" : "☀️";
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", loadPublicRanking);
+  </script>
+</body>
 </html>

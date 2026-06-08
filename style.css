@@ -2938,3 +2938,32 @@ body {
   background: repeating-linear-gradient(90deg, var(--c-gold), var(--c-gold) 1.5px, transparent 1.5px, transparent 4px, var(--c-gold) 4px, var(--c-gold) 6px, transparent 6px, transparent 7px) !important;
   opacity: 0.45 !important;
 }
+
+/* Public Dashboard styles */
+.public-body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.public-topbar {
+  --c-border:    #22222e;
+  --c-border2:   #2b2b3a;
+  --c-text:      #f5f7fa;
+  --c-text-2:    #9aa5b8;
+  --c-text-3:    #545e70;
+
+  height: var(--topbar-h);
+  background: rgba(19, 24, 31, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}

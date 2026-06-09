@@ -534,6 +534,22 @@
       color: var(--c-text-2);
       line-height: 1.45;
     }
+    .guide-close-btn {
+      background: none;
+      border: 1px solid var(--c-border);
+      color: var(--c-text-2);
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .guide-close-btn:hover {
+      border-color: var(--c-gold) !important;
+      color: var(--c-gold) !important;
+      background: rgba(255, 204, 41, 0.08) !important;
+    }
 
     /* Responsive */
     /* ═══════════════════════════════════════
@@ -693,8 +709,14 @@
 
     <!-- Como Cadastrar Palpites -->
     <div class="pub-guide-section">
-      <div class="pub-sh" style="margin-bottom:1rem;">
+      <script>
+        if (localStorage.getItem("bolao-hide-guide") === "true") {
+          document.currentScript.parentElement.style.display = "none";
+        }
+      </script>
+      <div class="pub-sh" style="margin-bottom:1rem; display: flex; justify-content: space-between; align-items: center;">
         <span class="pub-sh__title">🎮 Como cadastrar seus palpites?</span>
+        <button id="btn-close-guide" class="guide-close-btn" title="Esconder tutorial permanentemente">✕ Esconder</button>
       </div>
       <div class="pub-guide-grid">
         <div class="pub-guide-card">
@@ -1058,6 +1080,19 @@
           openUserId = null;
         }
       });
+    });
+  // ── Hide guide button handler ─────────────────────────
+  const guideSec = document.querySelector(".pub-guide-section");
+  const closeBtn = document.getElementById("btn-close-guide");
+  if (closeBtn && guideSec) {
+    closeBtn.addEventListener("click", () => {
+      guideSec.style.transition = "opacity 0.25s ease, transform 0.25s ease";
+      guideSec.style.opacity = "0";
+      guideSec.style.transform = "translateY(-10px)";
+      setTimeout(() => {
+        guideSec.style.display = "none";
+        localStorage.setItem("bolao-hide-guide", "true");
+      }, 250);
     });
   }
 

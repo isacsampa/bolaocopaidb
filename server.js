@@ -373,21 +373,55 @@ app.get("/api/palpites/publicos", async (_req, res) => {
 
 /**
  * GET /api/ranking
- * Retorna os dados da view `ranking_geral` ordenados por pontos decrescentes.
+ * Retorna o ranking completo, incluindo TODOS os participantes — mesmo os que
+ * ainda não fizeram nenhum palpite (aparecem com 0 pts).
+ * A view `ranking_geral` usa JOIN interno, então usuários sem palpites ficam
+ * invisíveis. Aqui fazemos o merge manual com a tabela `perfis`.
  * Rota pública.
  */
 app.get("/api/ranking", async (_req, res) => {
-  const { data, error } = await supabase
-    .from("ranking_geral")
-    .select("usuario_id, nome, pontos_totais")
-    .order("pontos_totais", { ascending: false });
+  // 1. Busca todos os perfis cadastrados
+  const { data: perfis, error: perfisError } = await supabase
+    .from("perfis")
+    .select("id, nome");
 
-  if (error) {
-    console.error("Erro ao buscar ranking:", error.message);
-    return res.status(500).json({ error: "Erro ao buscar o ranking." });
+  if (perfisError) {
+    console.error("Erro ao buscar perfis:", perfisError.message);
+    return res.status(500).json({ error: "Erro ao buscar participantes." });
   }
 
-  return res.status(200).json(data);
+  // 2. Busca ranking (só quem tem palpites)
+  const { data: rankingView, error: rankingError } = await supabase
+    .from("ranking_geral")
+    .select("usuario_id, pontos_totais");
+
+  if (rankingError) {
+    console.error("Erro ao buscar ranking_geral:", rankingError.message);
+    // Fallback: retorna todos com 0 pts se a view falhar
+    const fallback = (perfis || []).map(p => ({
+      usuario_id: p.id,
+      nome: p.nome,
+      pontos_totais: 0,
+    }));
+    return res.status(200).json(fallback);
+  }
+
+  // 3. Cria mapa de pontos por usuario_id
+  const ptsPorUsuario = {};
+  (rankingView || []).forEach(r => {
+    ptsPorUsuario[r.usuario_id] = r.pontos_totais ?? 0;
+  });
+
+  // 4. Merge: todos os perfis, com pontos da view (ou 0 se não estiver)
+  const resultado = (perfis || [])
+    .map(p => ({
+      usuario_id: p.id,
+      nome: p.nome,
+      pontos_totais: ptsPorUsuario[p.id] ?? 0,
+    }))
+    .sort((a, b) => b.pontos_totais - a.pontos_totais);
+
+  return res.status(200).json(resultado);
 });
 
 // ─── Rota de saúde ─────────────────────────────────────────────────────────────

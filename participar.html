@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bolão Copa 2026 — Participe!</title>
+  <meta name="description" content="Participe do Bolão Oficial da Copa do Mundo FIFA 2026. Cadastre-se, faça seus palpites e dispute o pódio com a galera!" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css?v=5" />
+  <style>
+    /* ═══════════════════════════════════════════════════════
+       LANDING PAGE — exclusive styles
+     ═══════════════════════════════════════════════════════ */
+
+    .pub-stripe {
+      background: linear-gradient(90deg, #006847 0%, #009a6a 33%, #d4a800 66%, #FFCC29 100%);
+      font-family: var(--font-display);
+      font-weight: 900; font-size: 0.62rem; letter-spacing: 0.12em;
+      color: #fff; text-transform: uppercase; text-align: center;
+      padding: 0.4rem 0.5rem; overflow: hidden; white-space: nowrap;
+    }
+
+    /* Hero */
+    .pub-hero {
+      padding: clamp(2.5rem, 7vw, 5rem) 1.25rem clamp(2rem, 4vw, 3rem);
+      text-align: center;
+    }
+    .pub-live-badge {
+      display: inline-flex; align-items: center; gap: .4rem;
+      background: rgba(255,204,41,.12); border: 1px solid rgba(255,204,41,.35);
+      color: var(--c-gold); font-size: 0.68rem; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      padding: .28rem .8rem; border-radius: 999px; margin-bottom: 1rem;
+    }
+    .pub-live-badge::before {
+      content: ''; width: 6px; height: 6px;
+      background: var(--c-gold); border-radius: 50%;
+      animation: blink-pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes blink-pulse { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+    .pub-hero__title {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 9vw, 4rem);
+      font-weight: 900; line-height: 1.05; margin-bottom: .75rem;
+      background: linear-gradient(135deg, #fff 0%, var(--c-gold) 55%, #ffdd6b 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .pub-hero__sub {
+      color: var(--c-text-2); font-size: clamp(.88rem, 2.8vw, 1.05rem);
+      max-width: 480px; margin: 0 auto 2rem; line-height: 1.6;
+    }
+    .pub-cta-row {
+      display: flex; justify-content: center; gap: .75rem;
+      flex-wrap: wrap; margin-bottom: 1rem;
+    }
+    .btn-pub-primary {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: linear-gradient(135deg, #006847 0%, #009a6a 100%);
+      color: #fff; font-weight: 700; font-size: clamp(.85rem, 2.5vw, .95rem);
+      padding: .75rem 1.75rem; border-radius: var(--radius-md);
+      text-decoration: none; border: none; cursor: pointer;
+      transition: transform .22s, box-shadow .22s;
+      box-shadow: 0 4px 24px rgba(0,104,71,.45); white-space: nowrap;
+    }
+    .btn-pub-primary:hover { transform:translateY(-2px); box-shadow:0 8px 32px rgba(0,104,71,.65); }
+    .btn-pub-ghost {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: rgba(255,255,255,.07); color: var(--c-text);
+      font-weight: 600; font-size: clamp(.85rem, 2.5vw, .95rem);
+      padding: .75rem 1.5rem; border-radius: var(--radius-md);
+      text-decoration: none; border: 1px solid var(--c-glass-border);
+      cursor: pointer; transition: background .2s, transform .2s; white-space: nowrap;
+    }
+    .btn-pub-ghost:hover { background:rgba(255,255,255,.13); transform:translateY(-1px); }
+
+    /* Invite box */
+    .pub-invite-box {
+      max-width: 640px; margin: 0 auto 3rem;
+      background: linear-gradient(135deg, rgba(0,104,71,.12) 0%, rgba(25,32,42,.45) 100%);
+      border: 1px solid rgba(0,104,71,.35);
+      border-radius: var(--radius-lg); padding: 2rem 1.75rem;
+      text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,.3);
+      position: relative; overflow: hidden; backdrop-filter: blur(10px);
+    }
+    .pub-invite-box::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: var(--c-trionda-grad);
+    }
+    .invite-tag {
+      display: inline-block; font-size: 0.65rem; font-weight: 800;
+      color: var(--c-gold); letter-spacing: 0.1em; margin-bottom: 0.75rem;
+      background: rgba(255,204,41,.08); border: 1px solid rgba(255,204,41,.2);
+      padding: 3px 10px; border-radius: 4px; text-transform: uppercase;
+    }
+    .invite-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.1rem, 4.5vw, 1.4rem);
+      font-weight: 800; color: #fff; margin-bottom: .6rem; letter-spacing: .02em;
+    }
+    .invite-desc {
+      font-size: clamp(.78rem, 2.8vw, .88rem); color: var(--c-text-2);
+      line-height: 1.55; margin-bottom: 1.5rem; max-width: 500px;
+      margin-left: auto; margin-right: auto;
+    }
+
+    /* Guide Section */
+    .pub-guide-section { max-width: 920px; margin: 0 auto 3rem; padding: 0 1rem; }
+    .pub-sh {
+      display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;
+      margin-bottom:1rem;padding-bottom:.65rem;border-bottom:1px solid var(--c-border);
+    }
+    .pub-sh__title { font-family:var(--font-display);font-size:clamp(.9rem,3vw,1.05rem);font-weight:700;display:flex;align-items:center;gap:.4rem; }
+    .pub-guide-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;
+    }
+    .pub-guide-card {
+      background: var(--c-glass-bg); border: 1px solid var(--c-glass-border);
+      border-radius: var(--radius-md); padding: 1.4rem;
+      position: relative; overflow: hidden; backdrop-filter: blur(10px);
+      transition: transform .2s ease;
+    }
+    .pub-guide-card:hover { transform:translateY(-2px); border-color:rgba(255,204,41,.3); }
+    .pg-step {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: linear-gradient(135deg, #006847 0%, #009a6a 100%);
+      color: #fff; font-size: 0.85rem; font-weight: 800; margin-bottom: 0.85rem;
+    }
+    .pg-title { font-size: 0.95rem; font-weight: 700; color: var(--c-text); margin-bottom: .5rem; }
+    .pg-text { font-size: 0.8rem; color: var(--c-text-2); line-height: 1.5; }
+    .guide-close-btn {
+      background: none; border: 1px solid var(--c-border); color: var(--c-text-2);
+      font-size: 0.65rem; font-weight: 600; padding: 0.2rem 0.6rem;
+      border-radius: 999px; cursor: pointer; transition: all 0.2s;
+    }
+    .guide-close-btn:hover { border-color:var(--c-gold)!important;color:var(--c-gold)!important;background:rgba(255,204,41,.08)!important; }
+
+    /* Footer */
+    .pub-footer { text-align:center;padding:1.5rem 1.5rem 2.5rem;color:var(--c-text-3);font-size:.76rem;border-top:1px solid var(--c-border); }
+    .pub-footer a { color:var(--c-gold);text-decoration:none;font-weight:600; }
+    .pub-footer a:hover { text-decoration:underline; }
+
+    /* Topbar CTA */
+    .topbar-btn-row { display:flex;align-items:center;gap:.75rem; }
+
+    /* Responsive */
+    @media(max-width:600px){
+      .pub-guide-grid { grid-template-columns: 1fr; gap: .65rem; }
+      .pub-cta-row { flex-direction:column;align-items:center;gap:.5rem; }
+      .btn-pub-primary,.btn-pub-ghost { width:100%;max-width:300px;justify-content:center; }
+    }
+    @media(max-width:340px){
+      .btn-pub-primary,.btn-pub-ghost { font-size:.8rem;padding:.65rem 1rem; }
+    }
+  </style>
+  <script>
+    (function(){
+      const t=localStorage.getItem('bolao-theme');
+      const s=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+      document.documentElement.setAttribute('data-theme',t||s);
+    })();
+  </script>
+</head>
+<body class="public-body">
+
+  <!-- Animated BG -->
+  <div class="auth-bg">
+    <div class="auth-bg__orb orb1"></div>
+    <div class="auth-bg__orb orb2"></div>
+    <div class="auth-bg__orb orb3"></div>
+    <div class="auth-bg__grid"></div>
+  </div>
+
+  <!-- #WE ARE 26 stripe -->
+  <div class="pub-stripe">#WE ARE 26 &nbsp;·&nbsp; Bolão Copa 2026 &nbsp;·&nbsp; #WE ARE 26 &nbsp;·&nbsp; Bolão Copa 2026 &nbsp;·&nbsp; #WE ARE 26</div>
+
+  <!-- Topbar -->
+  <header class="public-topbar">
+    <div class="topbar__brand">
+      <div class="fwc-logo-mini">
+        <img class="fwc-logo-mini__img" src="logo%20fifa.png?v=5" alt="Copa 2026" />
+      </div>
+      <span class="topbar__title" style="color:#fff;">BOLÃO COPA 2026</span>
+    </div>
+    <div class="topbar-btn-row">
+      <button id="btn-theme-toggle" class="topbar-theme-toggle" title="Alternar tema">🌙</button>
+      <a href="index.html" class="btn-pub-ghost" style="padding:.42rem 1rem;font-size:.8rem;text-decoration:none;">📊 Classificação</a>
+      <a href="login.html" class="btn-pub-primary" style="padding:.42rem 1rem;font-size:.8rem;text-decoration:none;">⚽ Acessar</a>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="pub-hero">
+    <div class="pub-live-badge">⚽ Copa do Mundo 2026</div>
+    <h1 class="pub-hero__title">Bolão Oficial<br>Copa 2026</h1>
+    <p class="pub-hero__sub">Cadastre-se, aposte nos placares dos jogos da Copa e dispute o pódio com seus amigos!</p>
+    <div class="pub-cta-row">
+      <a href="login.html" class="btn-pub-primary" style="font-size:1rem;padding:.85rem 2rem;">⚽ Fazer meus Palpites</a>
+      <a href="index.html" class="btn-pub-ghost" style="font-size:1rem;padding:.85rem 2rem;">📊 Ver Classificação</a>
+    </div>
+  </section>
+
+  <!-- Como participar (ocultável) -->
+  <div class="pub-guide-section">
+    <script>
+      if (localStorage.getItem("bolao-hide-guide") === "true") {
+        document.currentScript.parentElement.style.display = "none";
+      }
+    </script>
+    <div class="pub-sh" style="margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;">
+      <span class="pub-sh__title">🎮 Como participar?</span>
+      <button id="btn-close-guide" class="guide-close-btn" title="Esconder tutorial">✕ Esconder</button>
+    </div>
+    <div class="pub-guide-grid">
+      <div class="pub-guide-card">
+        <div class="pg-step">1</div>
+        <h3 class="pg-title">Crie sua Conta</h3>
+        <p class="pg-text">Clique em <strong>⚽ Acessar</strong> no topo ou em <strong>"Fazer meus Palpites"</strong> e cadastre-se com nome, e-mail e senha.</p>
+      </div>
+      <div class="pub-guide-card">
+        <div class="pg-step">2</div>
+        <h3 class="pg-title">Digite seus Palpites</h3>
+        <p class="pg-text">Acesse as abas <strong>Fase de Grupos</strong> e <strong>Mata-Mata</strong> e insira os placares que você prevê para cada jogo.</p>
+      </div>
+      <div class="pub-guide-card">
+        <div class="pg-step">3</div>
+        <h3 class="pg-title">Suba no Ranking</h3>
+        <p class="pg-text">Acerto exato de placar vale <strong>3 pts</strong>, acerto de resultado vale <strong>1 pt</strong>. Acompanhe a classificação em tempo real!</p>
+      </div>
+    </div>
+  </div>
+
+  <footer class="pub-footer">
+    ⚽ Bolão Copa 2026 &nbsp;·&nbsp; <a href="login.html">Entrar</a> para fazer seus palpites &nbsp;·&nbsp; Copa do Mundo FIFA 2026™ &nbsp;·&nbsp; Feito por <a href="https://isacdev.com.br" target="_blank" rel="noopener noreferrer">isac.dev</a>
+  </footer>
+
+  <script>
+  // Guide hide button
+  const guideSec = document.querySelector(".pub-guide-section");
+  const closeBtn = document.getElementById("btn-close-guide");
+  if (closeBtn && guideSec) {
+    closeBtn.addEventListener("click", () => {
+      guideSec.style.transition = "opacity 0.25s ease, transform 0.25s ease";
+      guideSec.style.opacity = "0";
+      guideSec.style.transform = "translateY(-10px)";
+      setTimeout(() => {
+        guideSec.style.display = "none";
+        localStorage.setItem("bolao-hide-guide", "true");
+      }, 250);
+    });
+  }
+
+  // Theme toggle
+  const btnT = document.getElementById("btn-theme-toggle");
+  if(btnT){
+    const cur = document.documentElement.getAttribute("data-theme")||"dark";
+    btnT.textContent = cur==="light"?"🌙":"☀️";
+    btnT.addEventListener("click",()=>{
+      const t = document.documentElement.getAttribute("data-theme")==="light"?"dark":"light";
+      document.documentElement.setAttribute("data-theme",t);
+      localStorage.setItem("bolao-theme",t);
+      btnT.textContent = t==="light"?"🌙":"☀️";
+    });
+  }
+  </script>
+
+</body>
+</html>

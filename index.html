@@ -805,8 +805,8 @@
   /* ══════════════════════════════════════════════════
      PUBLIC DASHBOARD — Logic
   ══════════════════════════════════════════════════ */
-  const API_BASE = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-    ? (window.location.port && window.location.port !== "3000" ? "http://localhost:3000/api" : "/api")
+  const API_BASE = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.hostname === "" || window.location.protocol === "file:")
+    ? (window.location.port === "3000" ? "/api" : "http://localhost:3000/api")
     : "/api";
 
   function esc(s){ if(!s)return""; return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;"); }
@@ -1081,6 +1081,7 @@
         }
       });
     });
+  }
   // ── Hide guide button handler ─────────────────────────
   const guideSec = document.querySelector(".pub-guide-section");
   const closeBtn = document.getElementById("btn-close-guide");

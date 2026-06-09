@@ -6,8 +6,8 @@
 // - Se rodando localmente (Live Server no 8080/5500), aponta para localhost:3000
 // - Se no deploy unificado (backend servindo frontend), usa caminho relativo '/api'
 // - Se hospedar o frontend separado (ex: Vercel/GitHub Pages), altere para a URL pública do seu backend
-const API_BASE = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-  ? (window.location.port && window.location.port !== "3000" ? "http://localhost:3000/api" : "/api")
+const API_BASE = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.hostname === "" || window.location.protocol === "file:")
+  ? (window.location.port === "3000" ? "/api" : "http://localhost:3000/api")
   : (window.location.origin.includes("github.io") || window.location.origin.includes("vercel.app") || window.location.origin.includes("netlify.app")
     ? "https://SEU-BACKEND-NO-RENDER.onrender.com/api" // <- Substitua pela URL do seu backend se hospedar separado!
     : "/api");

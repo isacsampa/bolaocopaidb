@@ -314,6 +314,9 @@ function getGameStatus(jogo) {
   const globalDeadline = new Date(deadlineStr);
   if (new Date() >= globalDeadline) return "encerrado";
 
+  // Exceção temporária para abrir o jogo do México vs África do Sul (jogo 290)
+  if (jogo.id === 290) return "aberto";
+
   if (new Date() >= new Date(jogo.data_hora)) return "em-andamento";
   return "aberto";
 }

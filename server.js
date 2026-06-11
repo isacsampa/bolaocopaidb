@@ -173,6 +173,92 @@ app.post("/api/auth/login", async (req, res) => {
   });
 });
 
+/**
+ * POST /api/auth/recovery
+ * Body: { email }
+ * Envia e-mail real de recuperação de senha via Supabase.
+ * O link no e-mail redireciona para a página de login do app.
+ */
+app.post("/api/auth/recovery", async (req, res) => {
+  const { email } = req.body;
+
+  if (!email || !email.trim()) {
+    return res.status(400).json({ error: "E-mail obrigatório." });
+  }
+
+  // URL de redirecionamento dinâmica para suportar desenvolvimento local e produção
+  const origin = req.headers.origin;
+  const redirectTo = origin
+    ? `${origin}/login.html`
+    : (process.env.APP_URL ? `${process.env.APP_URL}/login.html` : "https://bolaocopa-2026.onrender.com/login.html");
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+    redirectTo,
+  });
+
+  if (error) {
+    console.error("Erro recovery:", error.message);
+  }
+
+  // Sempre retorna sucesso para não revelar se o e-mail existe no sistema
+  return res.status(200).json({
+    message: "Se esse e-mail estiver cadastrado, você receberá as instruções em breve.",
+  });
+});
+
+/**
+ * POST /api/auth/reset-password
+ * Body: { access_token, refresh_token, nova_senha }
+ * Salva a nova senha para o usuário associado ao access_token.
+ */
+app.post("/api/auth/reset-password", async (req, res) => {
+  const { access_token, refresh_token, nova_senha } = req.body;
+
+  if (!access_token) {
+    return res.status(400).json({ error: "Token de acesso obrigatório." });
+  }
+
+  if (!nova_senha || nova_senha.length < 6) {
+    return res.status(400).json({ error: "A senha deve ter no mínimo 6 caracteres." });
+  }
+
+  try {
+    // 1. Cria um cliente Supabase temporário para esta requisição para evitar conflito de sessão
+    const tempSupabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false
+      }
+    });
+
+    // 2. Define a sessão temporária usando os tokens enviados pelo cliente
+    const { data: sessionData, error: sessionError } = await tempSupabase.auth.setSession({
+      access_token,
+      refresh_token: refresh_token || "",
+    });
+
+    if (sessionError || !sessionData.user) {
+      console.error("Erro ao definir sessão de redefinição:", sessionError?.message);
+      return res.status(401).json({ error: "Token inválido ou expirado. Por favor, solicite a recuperação novamente." });
+    }
+
+    // 3. Atualiza a senha na sessão do usuário (funciona com chave pública anon e service_role)
+    const { error: updateError } = await tempSupabase.auth.updateUser({
+      password: nova_senha,
+    });
+
+    if (updateError) {
+      console.error("Erro ao redefinir senha no Supabase:", updateError.message);
+      return res.status(400).json({ error: updateError.message });
+    }
+
+    return res.status(200).json({ message: "Senha atualizada com sucesso!" });
+  } catch (err) {
+    console.error("Erro interno no reset-password:", err);
+    return res.status(500).json({ error: "Erro interno no servidor." });
+  }
+});
+
 // ─── ROTAS DE JOGOS ────────────────────────────────────────────────────────────
 
 /**

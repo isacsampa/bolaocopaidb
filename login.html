@@ -111,6 +111,35 @@
         <button type="button" id="btn-back-to-login" class="btn-secondary" style="margin-top: 0.5rem; justify-content: center; width: 100%;">Voltar para o Login</button>
       </form>
 
+      <!-- Form Nova Senha (exibido quando o usuário chega pelo link do e-mail) -->
+      <form id="form-new-password" class="auth-form" novalidate style="display:none;">
+        <div style="text-align:center;margin-bottom:1.25rem;">
+          <span style="font-size:2rem;">&#x1F511;</span>
+          <h2 style="font-family:var(--font-display);font-size:1.1rem;font-weight:700;margin-top:.5rem;">Criar nova senha</h2>
+          <p style="font-size:.82rem;color:var(--c-text-2);margin-top:.3rem;">Digite e confirme sua nova senha abaixo.</p>
+        </div>
+        <div class="field-group">
+          <label for="new-senha">Nova senha</label>
+          <div class="input-password-wrap">
+            <input id="new-senha" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
+            <button type="button" class="toggle-pw" data-target="new-senha">👁</button>
+          </div>
+        </div>
+        <div class="field-group">
+          <label for="new-senha-confirm">Confirmar nova senha</label>
+          <div class="input-password-wrap">
+            <input id="new-senha-confirm" type="password" placeholder="Repita a senha" autocomplete="new-password" />
+            <button type="button" class="toggle-pw" data-target="new-senha-confirm">👁</button>
+          </div>
+        </div>
+        <div id="new-password-error" class="form-error" hidden></div>
+        <div id="new-password-success" class="form-success-alert" hidden></div>
+        <button type="submit" class="btn-primary" id="btn-new-password">
+          <span class="btn-text">🔒 Salvar nova senha</span>
+          <span class="btn-spinner" hidden></span>
+        </button>
+      </form>
+
       <!-- Link Classificação -->
       <div style="text-align: center; margin-top: 1.5rem; border-top: 1px solid var(--c-border); padding-top: 1rem;">
         <a href="index.html" class="auth-link" style="font-weight: 600; font-size: 0.82rem; display: inline-flex; align-items: center; gap: 0.3rem;">

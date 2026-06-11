@@ -1846,7 +1846,7 @@ function bootstrap() {
       const btnRecovery = document.getElementById("btn-recovery");
       const successEl = document.getElementById("recovery-success");
       const errorEl = document.getElementById("recovery-error");
-      
+
       if (!emailInput || !emailInput.value.trim()) {
         if (errorEl) {
           errorEl.textContent = "Por favor, digite seu e-mail.";
@@ -1854,21 +1854,26 @@ function bootstrap() {
         }
         return;
       }
-      
+
       if (errorEl) errorEl.hidden = true;
       if (successEl) successEl.hidden = true;
       setLoading(btnRecovery, true);
-      
+
       try {
-        await new Promise(resolve => setTimeout(resolve, 1200));
+        const res = await fetch(`${API_BASE}/auth/recovery`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: emailInput.value.trim() }),
+        });
+        const data = await res.json();
         if (successEl) {
-          successEl.textContent = "Instruções de recuperação enviadas para o e-mail!";
+          successEl.textContent = data.message || "✅ Instruções enviadas! Verifique seu e-mail (inclusive a caixa de spam).";
           successEl.hidden = false;
         }
         emailInput.value = "";
       } catch (err) {
         if (errorEl) {
-          errorEl.textContent = err.message;
+          errorEl.textContent = "Erro ao enviar. Tente novamente.";
           errorEl.hidden = false;
         }
       } finally {
@@ -1960,3 +1965,106 @@ function bootstrap() {
 document.readyState === "loading"
   ? document.addEventListener("DOMContentLoaded", bootstrap)
   : bootstrap();
+
+// ─── Fluxo de redefinição de senha ─────────────────────────────────────────────
+// Quando o usuário clica no link do e-mail de recuperação, o Supabase redireciona
+// para login.html com fragment: #type=recovery&access_token=xxx&refresh_token=yyy
+// Detectamos isso aqui e exibimos o formulário de nova senha.
+(function handlePasswordRecoveryFlow() {
+  const hash = window.location.hash;
+  if (!hash.includes("type=recovery")) return;
+
+  // Extrai tokens do hash
+  const params = new URLSearchParams(hash.replace(/^#/, ""));
+  const accessToken = params.get("access_token");
+  const refreshToken = params.get("refresh_token");
+
+  if (!accessToken) return;
+
+  // Limpa o hash da URL para não reprocessar em reload
+  history.replaceState(null, "", window.location.pathname);
+
+  // Aguarda o DOM estar pronto
+  function showResetForm() {
+    // Esconde todos os forms e tabs
+    document.querySelectorAll(".auth-form").forEach(f => {
+      f.classList.remove("active");
+      f.style.display = "none";
+    });
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    const authTabs = document.querySelector(".auth-tabs");
+    if (authTabs) authTabs.style.display = "none";
+
+    // Mostra o form de nova senha
+    const formNewPw = document.getElementById("form-new-password");
+    if (formNewPw) {
+      formNewPw.style.display = "block";
+      formNewPw.classList.add("active");
+    }
+
+    // Handler de submit da nova senha
+    if (formNewPw && !formNewPw._resetHandlerAttached) {
+      formNewPw._resetHandlerAttached = true;
+      formNewPw.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const novaSenha = document.getElementById("new-senha")?.value || "";
+        const confirmSenha = document.getElementById("new-senha-confirm")?.value || "";
+        const btnEl = document.getElementById("btn-new-password");
+        const errorEl = document.getElementById("new-password-error");
+        const successEl = document.getElementById("new-password-success");
+
+        if (errorEl) errorEl.hidden = true;
+        if (successEl) successEl.hidden = true;
+
+        if (novaSenha.length < 6) {
+          if (errorEl) { errorEl.textContent = "A senha deve ter no mínimo 6 caracteres."; errorEl.hidden = false; }
+          return;
+        }
+        if (novaSenha !== confirmSenha) {
+          if (errorEl) { errorEl.textContent = "As senhas não coincidem."; errorEl.hidden = false; }
+          return;
+        }
+
+        if (btnEl) { const sp = btnEl.querySelector(".btn-spinner"); const tx = btnEl.querySelector(".btn-text"); if (sp) sp.hidden = false; if (tx) tx.hidden = true; btnEl.disabled = true; }
+
+        try {
+          const res = await fetch(`${API_BASE}/auth/reset-password`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ access_token: accessToken, refresh_token: refreshToken, nova_senha: novaSenha }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Erro ao salvar senha.");
+
+          if (successEl) {
+            successEl.textContent = "✅ Senha alterada com sucesso! Redirecionando para o login…";
+            successEl.hidden = false;
+          }
+          if (formNewPw) formNewPw.reset();
+
+          // Redireciona para login após 2 segundos
+          setTimeout(() => {
+            const authTabs = document.querySelector(".auth-tabs");
+            if (authTabs) authTabs.style.display = "";
+            document.querySelectorAll(".auth-form").forEach(f => { f.style.display = ""; f.classList.remove("active"); });
+            formNewPw.style.display = "none";
+            const loginForm = document.getElementById("form-login");
+            if (loginForm) loginForm.classList.add("active");
+            const loginTab = document.querySelector('.tab-btn[data-tab="login"]');
+            if (loginTab) loginTab.classList.add("active");
+          }, 2000);
+        } catch (err) {
+          if (errorEl) { errorEl.textContent = err.message; errorEl.hidden = false; }
+        } finally {
+          if (btnEl) { const sp = btnEl.querySelector(".btn-spinner"); const tx = btnEl.querySelector(".btn-text"); if (sp) sp.hidden = true; if (tx) tx.hidden = false; btnEl.disabled = false; }
+        }
+      });
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", showResetForm);
+  } else {
+    showResetForm();
+  }
+})();

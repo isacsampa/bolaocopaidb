@@ -1,0 +1,386 @@
+{
+  "758": {
+    "name": "Uruguai",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "759": {
+    "name": "Alemanha",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "760": {
+    "name": "Espanha",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "761": {
+    "name": "Paraguai",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "762": {
+    "name": "Argentina",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "763": {
+    "name": "Gana",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "764": {
+    "name": "Brasil",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "765": {
+    "name": "Portugal",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "766": {
+    "name": "Japão",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "769": {
+    "name": "México",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "770": {
+    "name": "Inglaterra",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "771": {
+    "name": "EUA",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "772": {
+    "name": "Coreia do Sul",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "773": {
+    "name": "França",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "774": {
+    "name": "África do Sul",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "778": {
+    "name": "Argélia",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "779": {
+    "name": "Austrália",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "783": {
+    "name": "Nova Zelândia",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "788": {
+    "name": "Suíça",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "791": {
+    "name": "Equador",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "792": {
+    "name": "Suécia",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "798": {
+    "name": "Rep. Tcheca",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "799": {
+    "name": "Croácia",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "801": {
+    "name": "Arábia Saudita",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "802": {
+    "name": "Tunísia",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "803": {
+    "name": "Turquia",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "804": {
+    "name": "Senegal",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "805": {
+    "name": "Bélgica",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "815": {
+    "name": "Marrocos",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "816": {
+    "name": "Áustria",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "818": {
+    "name": "Colômbia",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "825": {
+    "name": "Egito",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "828": {
+    "name": "Canadá",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "836": {
+    "name": "Haiti",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "840": {
+    "name": "Irã",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "1060": {
+    "name": "Bósnia",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "1836": {
+    "name": "Panamá",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "1930": {
+    "name": "Cabo Verde",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "1934": {
+    "name": "Congo DR",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "1935": {
+    "name": "Costa Marfim",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "8030": {
+    "name": "Catar",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "8049": {
+    "name": "Jordânia",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "8062": {
+    "name": "Iraque",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "8070": {
+    "name": "Uzbequistão",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "8601": {
+    "name": "Holanda",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "8872": {
+    "name": "Noruega",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "8873": {
+    "name": "Escócia",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  },
+  "9460": {
+    "name": "Curaçau",
+    "form": "N/A",
+    "pts": 0,
+    "gf": 0,
+    "ga": 0,
+    "games": 0
+  }
+}

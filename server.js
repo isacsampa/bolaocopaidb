@@ -466,48 +466,93 @@ app.get("/api/palpites/publicos", async (_req, res) => {
  * Rota pública.
  */
 app.get("/api/ranking", async (_req, res) => {
-  // 1. Busca todos os perfis cadastrados
-  const { data: perfis, error: perfisError } = await supabase
-    .from("perfis")
-    .select("id, nome");
+  try {
+    // 1. Busca todos os perfis cadastrados
+    const { data: perfis, error: perfisError } = await supabase
+      .from("perfis")
+      .select("id, nome");
 
-  if (perfisError) {
-    console.error("Erro ao buscar perfis:", perfisError.message);
-    return res.status(500).json({ error: "Erro ao buscar participantes." });
+    if (perfisError) throw perfisError;
+
+    // 2. Busca todos os jogos com placares reais registrados
+    const { data: jogos, error: jogosError } = await supabase
+      .from("jogos")
+      .select("id, gols_a, gols_b")
+      .not("gols_a", "is", null)
+      .not("gols_b", "is", null);
+
+    if (jogosError) throw jogosError;
+
+    // 3. Busca todos os palpites
+    const { data: palpites, error: palpitesError } = await supabase
+      .from("palpites")
+      .select("usuario_id, jogo_id, palpite_gols_a, palpite_gols_b");
+
+    if (palpitesError) throw palpitesError;
+
+    // 4. Processa e calcula pontuações + desempates em memória
+    const userStats = {};
+    (perfis || []).forEach(p => {
+      userStats[p.id] = {
+        usuario_id: p.id,
+        nome: p.nome,
+        pontos_totais: 0,
+        acertos_exatos: 0,
+        acertos_resultados: 0
+      };
+    });
+
+    const gamesMap = {};
+    (jogos || []).forEach(j => {
+      gamesMap[j.id] = j;
+    });
+
+    (palpites || []).forEach(p => {
+      const stats = userStats[p.usuario_id];
+      const jogo = gamesMap[p.jogo_id];
+      if (!stats || !jogo) return;
+
+      const palA = Number(p.palpite_gols_a);
+      const palB = Number(p.palpite_gols_b);
+      const realA = Number(jogo.gols_a);
+      const realB = Number(jogo.gols_b);
+
+      const exact = palA === realA && palB === realB;
+      const outcome = Math.sign(palA - palB) === Math.sign(realA - realB);
+
+      if (exact) {
+        stats.pontos_totais += 3;
+        stats.acertos_exatos += 1;
+        stats.acertos_resultados += 1;
+      } else if (outcome) {
+        stats.pontos_totais += 1;
+        stats.acertos_resultados += 1;
+      }
+    });
+
+    // 5. Ordena de acordo com o regulamento do bolão:
+    //    1º: Pontos Totais (decrescente)
+    //    2º: Acertos Exatos (decrescente)
+    //    3º: Resultados de Partida (decrescente)
+    //    4º: Nome (ordem alfabética para estabilidade)
+    const resultado = Object.values(userStats).sort((a, b) => {
+      if (b.pontos_totais !== a.pontos_totais) {
+        return b.pontos_totais - a.pontos_totais;
+      }
+      if (b.acertos_exatos !== a.acertos_exatos) {
+        return b.acertos_exatos - a.acertos_exatos;
+      }
+      if (b.acertos_resultados !== a.acertos_resultados) {
+        return b.acertos_resultados - a.acertos_resultados;
+      }
+      return a.nome.localeCompare(b.nome);
+    });
+
+    return res.status(200).json(resultado);
+  } catch (err) {
+    console.error("Erro ao calcular ranking com desempates:", err.message);
+    return res.status(500).json({ error: "Erro ao carregar ranking geral." });
   }
-
-  // 2. Busca ranking (só quem tem palpites)
-  const { data: rankingView, error: rankingError } = await supabase
-    .from("ranking_geral")
-    .select("usuario_id, pontos_totais");
-
-  if (rankingError) {
-    console.error("Erro ao buscar ranking_geral:", rankingError.message);
-    // Fallback: retorna todos com 0 pts se a view falhar
-    const fallback = (perfis || []).map(p => ({
-      usuario_id: p.id,
-      nome: p.nome,
-      pontos_totais: 0,
-    }));
-    return res.status(200).json(fallback);
-  }
-
-  // 3. Cria mapa de pontos por usuario_id
-  const ptsPorUsuario = {};
-  (rankingView || []).forEach(r => {
-    ptsPorUsuario[r.usuario_id] = r.pontos_totais ?? 0;
-  });
-
-  // 4. Merge: todos os perfis, com pontos da view (ou 0 se não estiver)
-  const resultado = (perfis || [])
-    .map(p => ({
-      usuario_id: p.id,
-      nome: p.nome,
-      pontos_totais: ptsPorUsuario[p.id] ?? 0,
-    }))
-    .sort((a, b) => b.pontos_totais - a.pontos_totais);
-
-  return res.status(200).json(resultado);
 });
 
 // ─── Rota de saúde ─────────────────────────────────────────────────────────────

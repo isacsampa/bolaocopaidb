@@ -397,6 +397,46 @@
           </button>
         </div>
       </div>
+
+      <!-- Regulamento Oficial (Collapsible Panel) -->
+      <div class="pub-table-card" style="margin-top: 1.5rem; padding: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;" id="btn-toggle-rules">
+          <h3 style="font-family: var(--font-display); font-size: 1rem; font-weight: 800; color: #fff; margin: 0; display: flex; align-items: center; gap: 8px;">
+            📋 Regulamento Oficial do Bolão
+          </h3>
+          <span id="rules-chevron" style="color: var(--c-text-3); font-size: 0.8rem; transition: transform 0.25s;">▼</span>
+        </div>
+        
+        <div id="rules-content" style="display: none; margin-top: 1.25rem; font-size: 0.85rem; color: var(--c-text-2); line-height: 1.6; border-top: 1px solid var(--c-border); padding-top: 1.25rem;">
+          <h4 style="color: #fff; margin-top: 0; font-size: 0.9rem; font-weight: 700; margin-bottom: 0.5rem;">🎯 Funcionamento & Prazos</h4>
+          <ul style="margin: 0 0 1.25rem 0; padding-left: 1.25rem; list-style-type: square;">
+            <li>O bolão será realizado <strong>apenas durante a Fase de Grupos</strong> da Copa do Mundo FIFA 2026.</li>
+            <li>Cada participante deve preencher os palpites para <strong>todos os 48 jogos</strong> da fase de grupos.</li>
+            <li>Campos em branco não serão computados. Certifique-se de preencher e salvar todos os placares.</li>
+          </ul>
+
+          <h4 style="color: #fff; font-size: 0.9rem; font-weight: 700; margin-bottom: 0.5rem;">⭐ Regras de Pontuação</h4>
+          <ul style="margin: 0 0 1.25rem 0; padding-left: 1.25rem; list-style-type: square;">
+            <li><strong>Acerto do resultado da partida</strong> (Vitória, Empate ou Derrota): <strong>+1 ponto</strong>.</li>
+            <li><strong>Acerto do placar exato</strong> da partida: <strong>+2 pontos</strong>.</li>
+            <li><em>Exemplo:</em> Se você palpitar 2x1 e o jogo terminar exatamente 2x1, você ganha <strong>3 pontos</strong> (1 pelo resultado + 2 pelo placar exato).</li>
+          </ul>
+
+          <h4 style="color: #fff; font-size: 0.9rem; font-weight: 700; margin-bottom: 0.5rem;">📊 Critérios de Desempate</h4>
+          <ol style="margin: 0 0 1.25rem 0; padding-left: 1.25rem;">
+            <li>Maior quantidade de <strong>placares exatos</strong> acertados.</li>
+            <li>Maior quantidade de <strong>resultados de partida</strong> acertados.</li>
+            <li>Persistindo o empate, o prêmio acumulado será <strong>dividido igualmente</strong> entre os empatados.</li>
+          </ol>
+
+          <h4 style="color: #fff; font-size: 0.9rem; font-weight: 700; margin-bottom: 0.5rem;">💰 Inscrição & Premiação</h4>
+          <ul style="margin: 0; padding-left: 1.25rem; list-style-type: square;">
+            <li><strong>Valor da inscrição:</strong> R$ 100,00 por participante.</li>
+            <li><strong>Prêmio:</strong> O valor total acumulado das inscrições será pago integralmente ao vencedor (1º colocado do ranking) ao término da fase de grupos.</li>
+            <li><strong>Pagamento:</strong> O pagamento ao vencedor deverá ser realizado via PIX. A fase de grupos termina em 27/06/2026.</li>
+          </ul>
+        </div>
+      </div>
     </div>
 
   </main>
@@ -595,6 +635,9 @@
           <td class="td-pts pts-cell">
             <div class="pts-val">${r.pontos_totais??0}</div>
             <div class="pts-lbl">pontos</div>
+            <div style="font-size:0.56rem;color:var(--c-text-3);font-weight:600;margin-top:3px;white-space:nowrap;" title="PE: Placares Exatos | RT: Resultados Totais">
+              ${r.acertos_exatos??0} PE • ${r.acertos_resultados??0} RT
+            </div>
           </td>
           <td class="td-chev"><span class="row-chevron">›</span></td>
         </tr>
@@ -646,6 +689,18 @@
   document.addEventListener("DOMContentLoaded",()=>{
     refresh();
     setInterval(()=>refresh(),60_000);
+
+    // Toggle rules listener
+    const btnToggleRules = document.getElementById("btn-toggle-rules");
+    const rulesContent = document.getElementById("rules-content");
+    const rulesChevron = document.getElementById("rules-chevron");
+    if (btnToggleRules && rulesContent && rulesChevron) {
+      btnToggleRules.addEventListener("click", () => {
+        const isHidden = rulesContent.style.display === "none";
+        rulesContent.style.display = isHidden ? "block" : "none";
+        rulesChevron.style.transform = isHidden ? "rotate(180deg)" : "";
+      });
+    }
   });
   </script>
 

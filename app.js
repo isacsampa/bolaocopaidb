@@ -1381,7 +1381,12 @@ async function loadRanking() {
                 ${trendHtml}
               </div>
             </td>
-            <td><span class="pontos-val">${r.pontos_totais ?? 0} pts</span></td>
+            <td>
+              <span class="pontos-val">${r.pontos_totais ?? 0} pts</span>
+              <div style="font-size:0.75rem;color:var(--c-text-muted);margin-top:2px;">
+                ${r.acertos_exatos ?? 0} exatos • ${r.acertos_resultados ?? 0} resultados
+              </div>
+            </td>
           </tr>`;
       }).join("");
       tableEl.hidden = false;
@@ -1744,6 +1749,18 @@ function initApp() {
   loadBracketSession();
   showSection("dashboard");
   loadDashboard();
+
+  // Toggle rules dashboard listener
+  const btnToggleRulesDash = document.getElementById("btn-toggle-rules-dash");
+  const rulesContentDash = document.getElementById("rules-content-dash");
+  const rulesChevronDash = document.getElementById("rules-chevron-dash");
+  if (btnToggleRulesDash && rulesContentDash && rulesChevronDash) {
+    btnToggleRulesDash.addEventListener("click", () => {
+      const isHidden = rulesContentDash.style.display === "none";
+      rulesContentDash.style.display = isHidden ? "block" : "none";
+      rulesChevronDash.style.transform = isHidden ? "rotate(180deg)" : "";
+    });
+  }
 }
  
 function checkPageAccess() {

@@ -468,6 +468,37 @@
   ];
   function avGrad(name){ let h=0;for(let c of name)h=c.charCodeAt(0)+((h<<5)-h);return GRADS[Math.abs(h)%GRADS.length]; }
 
+  function getParticipantPhoto(nome) {
+    if (!nome) return null;
+    const norm = nome.toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .trim();
+    
+    const mapping = {
+      "valeria": "valeria.png",
+      "tafnes": "tafnes.png",
+      "joao pedro": "joão pedro.png",
+      "isaac": "isaac.png",
+      "jackslanio": "jackslanio.png",
+      "geraldo": "geraldo.png",
+      "raimundo borges": "raimundo borges.png",
+      "kimberly": "kimberly.png",
+      "anderson leite": "anderson.png",
+      "anderson": "anderson.png",
+      "caio": "caio.png",
+      "wallef": "wallef.png"
+    };
+    
+    if (mapping[norm]) return mapping[norm];
+    
+    for (const key of Object.keys(mapping)) {
+      if (norm.includes(key)) {
+        return mapping[key];
+      }
+    }
+    return null;
+  }
+
   let rankingData  = [];
   let palpitesData = [];
   let openUserId   = null;
@@ -591,11 +622,23 @@
       const init = p.nome.slice(0,2).toUpperCase();
       const bg   = rank===1?"linear-gradient(135deg,#c9860a,var(--c-gold))":rank===2?"linear-gradient(135deg,#8e99a4,#c7d0d8)":"linear-gradient(135deg,#955a1a,#d4895a)";
       const heights={1:"68px",2:"50px",3:"36px"};
+      const photo = getParticipantPhoto(p.nome);
+      
+      const avStyle = photo 
+        ? `background-image: url('${photo}'); background-size: cover; background-position: center; border: 3.5px solid ${rank===1?'var(--c-gold)':'rgba(255,255,255,0.2)'};`
+        : `background: ${bg};`;
+        
+      const innerAv = photo ? '' : esc(init);
+      const isFirst = rank === 1;
+      
       return `
         <div class="pod-col pod-col--${rank}">
           ${crown?`<div class="pod-crown">👑</div>`:`<div style="height:26px;"></div>`}
           <div class="pod-av-wrap">
-            <div class="pod-av" style="background:${bg}">${esc(init)}</div>
+            <div class="pod-av" style="${avStyle}">
+              ${innerAv}
+              ${isFirst ? '<span class="money-badge-overlay pod-first">💰</span>' : ''}
+            </div>
             <span class="pod-medal">${medal}</span>
           </div>
           <div class="pod-name" title="${esc(p.nome)}">${esc(p.nome.split(" ")[0])}</div>
@@ -620,12 +663,25 @@
         : `<span class="trend-chip down">▼ caiu</span>`;
       const hasPals  = palpitesData.some(p=>p.usuario_id===r.usuario_id);
       const palCount = palpitesData.filter(p=>p.usuario_id===r.usuario_id).length;
+      
+      const photo = getParticipantPhoto(r.nome);
+      const isFirstPlace = r.pontos_totais === rankingData[0].pontos_totais && r.pontos_totais > 0;
+      
+      const avHtml = photo
+        ? `<div class="user-av" style="background-image: url('${photo}'); background-size: cover; background-position: center; position: relative;">
+             ${isFirstPlace ? '<span class="money-badge-overlay">💰</span>' : ''}
+           </div>`
+        : `<div class="user-av" style="background:${grad}; position: relative;">
+             ${esc(init)}
+             ${isFirstPlace ? '<span class="money-badge-overlay">💰</span>' : ''}
+           </div>`;
+
       return `
         <tr class="ranking-row" data-uid="${esc(r.usuario_id)}" data-idx="${i}" style="animation-delay:${i*.04}s;">
           <td class="td-rank"><span class="rank-badge ${bdgCls}">${i+1}</span></td>
           <td>
             <div class="user-cell">
-              <div class="user-av" style="background:${grad};"> ${esc(init)}</div>
+              ${avHtml}
               <div class="user-info">
                 <span class="user-name">${esc(r.nome)}${trendHtml}</span>
                 ${hasPals ? `<span style="display:block;font-size:.6rem;color:var(--c-text-3);font-weight:500;margin-top:.05rem;">${palCount} palpites</span>` : ''}

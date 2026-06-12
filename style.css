@@ -2997,3 +2997,51 @@ body {
   z-index: 100;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
+
+/* Money Badge Overlay styles */
+.money-badge-overlay {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  font-size: 0.9rem;
+  background: #16a34a;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.25);
+  z-index: 2;
+  animation: float-money 2s ease-in-out infinite;
+}
+
+@keyframes float-money {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-2px) scale(1.08); }
+}
+
+.money-badge-overlay.sml {
+  width: 15px;
+  height: 15px;
+  font-size: 0.68rem;
+  bottom: -3px;
+  right: -3px;
+}
+
+.money-badge-overlay.xs {
+  width: 12px;
+  height: 12px;
+  font-size: 0.52rem;
+  bottom: -2px;
+  right: -2px;
+}
+
+.money-badge-overlay.pod-first {
+  width: 24px;
+  height: 24px;
+  font-size: 1.1rem;
+  bottom: -5px;
+  right: -5px;
+}

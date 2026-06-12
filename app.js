@@ -305,6 +305,37 @@ function formatDate(iso) {
     }).format(new Date(iso));
   } catch { return iso; }
 }
+
+function getParticipantPhoto(nome) {
+  if (!nome) return null;
+  const norm = nome.toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .trim();
+  
+  const mapping = {
+    "valeria": "valeria.png",
+    "tafnes": "tafnes.png",
+    "joao pedro": "joão pedro.png",
+    "isaac": "isaac.png",
+    "jackslanio": "jackslanio.png",
+    "geraldo": "geraldo.png",
+    "raimundo borges": "raimundo borges.png",
+    "kimberly": "kimberly.png",
+    "anderson leite": "anderson.png",
+    "anderson": "anderson.png",
+    "caio": "caio.png",
+    "wallef": "wallef.png"
+  };
+  
+  if (mapping[norm]) return mapping[norm];
+  
+  for (const key of Object.keys(mapping)) {
+    if (norm.includes(key)) {
+      return mapping[key];
+    }
+  }
+  return null;
+}
  
 function getGameStatus(jogo) {
   if (jogo.gols_a !== null && jogo.gols_b !== null) return "encerrado";
@@ -1318,12 +1349,32 @@ async function loadRanking() {
       const isMe2 = p2 && state.user && p2.usuario_id === state.user.id;
       const isMe3 = p3 && state.user && p3.usuario_id === state.user.id;
 
+      const photo1 = p1 ? getParticipantPhoto(p1.nome) : null;
+      const photo2 = p2 ? getParticipantPhoto(p2.nome) : null;
+      const photo3 = p3 ? getParticipantPhoto(p3.nome) : null;
+
+      const style1 = photo1 ? `background-image: url('${photo1}'); background-size: cover; background-position: center; border: 3px solid var(--c-gold);` : '';
+      const style2 = photo2 ? `background-image: url('${photo2}'); background-size: cover; background-position: center;` : '';
+      const style3 = photo3 ? `background-image: url('${photo3}'); background-size: cover; background-position: center;` : '';
+
+      const avHtml1 = photo1 
+        ? `<div class="podium-avatar" style="${style1}"><span class="money-badge-overlay pod-first">💰</span></div>` 
+        : `<div class="podium-avatar"><span class="money-badge-overlay pod-first">💰</span>${esc(p1.nome.slice(0, 2).toUpperCase())}</div>`;
+        
+      const avHtml2 = p2 ? (photo2 
+        ? `<div class="podium-avatar" style="${style2}"></div>` 
+        : `<div class="podium-avatar">${esc(p2.nome.slice(0, 2).toUpperCase())}</div>`) : '';
+        
+      const avHtml3 = p3 ? (photo3 
+        ? `<div class="podium-avatar" style="${style3}"></div>` 
+        : `<div class="podium-avatar">${esc(p3.nome.slice(0, 2).toUpperCase())}</div>`) : '';
+
       podiumEl.innerHTML = `
         ${p2 ? `
         <div class="podium-col podium-col--2 ${isMe2 ? 'is-me' : ''}">
           <div class="podium-avatar-wrap">
             <span class="podium-medal">🥈</span>
-            <div class="podium-avatar">${esc(p2.nome.slice(0, 2).toUpperCase())}</div>
+            ${avHtml2}
           </div>
           <div class="podium-name" title="${esc(p2.nome)}">${esc(p2.nome.split(" ")[0])}</div>
           <div class="podium-pts">${p2.pontos_totais ?? 0} pts</div>
@@ -1334,7 +1385,7 @@ async function loadRanking() {
           <div class="podium-crown">👑</div>
           <div class="podium-avatar-wrap">
             <span class="podium-medal">🥇</span>
-            <div class="podium-avatar">${esc(p1.nome.slice(0, 2).toUpperCase())}</div>
+            ${avHtml1}
           </div>
           <div class="podium-name" title="${esc(p1.nome)}">${esc(p1.nome.split(" ")[0])}</div>
           <div class="podium-pts">${p1.pontos_totais ?? 0} pts</div>
@@ -1345,7 +1396,7 @@ async function loadRanking() {
         <div class="podium-col podium-col--3 ${isMe3 ? 'is-me' : ''}">
           <div class="podium-avatar-wrap">
             <span class="podium-medal">🥉</span>
-            <div class="podium-avatar">${esc(p3.nome.slice(0, 2).toUpperCase())}</div>
+            ${avHtml3}
           </div>
           <div class="podium-name" title="${esc(p3.nome)}">${esc(p3.nome.split(" ")[0])}</div>
           <div class="podium-pts">${p3.pontos_totais ?? 0} pts</div>
@@ -1371,12 +1422,24 @@ async function loadRanking() {
           ? `<span class="trend-indicator trend--up" title="Subiu de posição">▲</span>` 
           : `<span class="trend-indicator trend--down" title="Caiu de posição">▼</span>`;
             
+        const photo = getParticipantPhoto(r.nome);
+        const isFirstPlace = r.pontos_totais === ranking[0].pontos_totais && r.pontos_totais > 0;
+        
+        const avHtml = photo
+          ? `<div class="user-avatar-sml" style="background-image: url('${photo}'); background-size: cover; background-position: center; position: relative;">
+               ${isFirstPlace ? '<span class="money-badge-overlay sml">💰</span>' : ''}
+             </div>`
+          : `<div class="user-avatar-sml" style="position: relative;">
+               ${esc(r.nome.slice(0, 2).toUpperCase())}
+               ${isFirstPlace ? '<span class="money-badge-overlay sml">💰</span>' : ''}
+             </div>`;
+
         return `
           <tr class="${rowCls}" style="animation-delay:${i*0.04}s">
             <td><span class="rank-badge ${badgeClass}">${idx + 1}</span></td>
             <td class="nome-participante">
               <div style="display: flex; align-items: center; gap: 8px;">
-                <div class="user-avatar-sml">${esc(r.nome.slice(0, 2).toUpperCase())}</div>
+                ${avHtml}
                 <span>${esc(r.nome)}</span>
                 ${trendHtml}
               </div>
@@ -1566,12 +1629,24 @@ async function loadDashboard() {
         const isMe = state.user && r.usuario_id === state.user.id;
         const rowCls = isMe ? "is-me" : "";
         const badgeClass = i === 0 ? "gold" : (i === 1 ? "silver" : (i === 2 ? "bronze" : "normal"));
+        const photo = getParticipantPhoto(r.nome);
+        const isFirstPlace = r.pontos_totais === ranking[0].pontos_totais && r.pontos_totais > 0;
+        
+        const avHtml = photo
+          ? `<div class="user-avatar-sml" style="width:24px; height:24px; font-size:0.65rem; background-image: url('${photo}'); background-size: cover; background-position: center; position: relative;">
+               ${isFirstPlace ? '<span class="money-badge-overlay xs">💰</span>' : ''}
+             </div>`
+          : `<div class="user-avatar-sml" style="width:24px; height:24px; font-size:0.65rem; position: relative;">
+               ${esc(r.nome.slice(0, 2).toUpperCase())}
+               ${isFirstPlace ? '<span class="money-badge-overlay xs">💰</span>' : ''}
+             </div>`;
+
         return `
           <tr class="${rowCls}">
             <td><span class="rank-badge ${badgeClass}">${i + 1}</span></td>
             <td class="nome-participante">
               <div style="display: flex; align-items: center; gap: 8px;">
-                <div class="user-avatar-sml" style="width:24px; height:24px; font-size:0.65rem;">${esc(r.nome.slice(0, 2).toUpperCase())}</div>
+                ${avHtml}
                 <span>${esc(r.nome.split(" ")[0])}</span>
               </div>
             </td>

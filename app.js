@@ -1364,14 +1364,12 @@ async function loadRanking() {
         const rowCls = isMe ? "is-me" : "";
         const badgeClass = idx === 0 ? "gold" : (idx === 1 ? "silver" : (idx === 2 ? "bronze" : "normal"));
         
-        // Deterministic trend indicator based on usuario_id char codes
-        const trends = ["up", "down", "same"];
-        const trend = trends[(r.usuario_id.charCodeAt(0) + r.usuario_id.charCodeAt(r.usuario_id.length - 1)) % 3];
+        // Deterministic trend indicator based on usuario_id char codes (only up/down)
+        const trends = ["up", "down"];
+        const trend = trends[(r.usuario_id.charCodeAt(0) + r.usuario_id.charCodeAt(r.usuario_id.length - 1)) % 2];
         const trendHtml = trend === "up" 
           ? `<span class="trend-indicator trend--up" title="Subiu de posição">▲</span>` 
-          : (trend === "down" 
-            ? `<span class="trend-indicator trend--down" title="Caiu de posição">▼</span>` 
-            : `<span class="trend-indicator trend--same" title="Manteve a posição">▬</span>`);
+          : `<span class="trend-indicator trend--down" title="Caiu de posição">▼</span>`;
             
         return `
           <tr class="${rowCls}" style="animation-delay:${i*0.04}s">

@@ -574,11 +574,10 @@
       const bdgCls = i===0?"g":i===1?"s":i===2?"b":"";
       const grad   = avGrad(r.nome);
       const uid    = r.usuario_id||r.nome;
-      const tN     = (uid.charCodeAt(0)+(uid.charCodeAt(uid.length-1)||0))%3;
+      const tN     = (uid.charCodeAt(0)+(uid.charCodeAt(uid.length-1)||0))%2;
       const trendHtml = tN===0
         ? `<span class="trend-chip up">▲ subiu</span>`
-        : tN===1 ? `<span class="trend-chip down">▼ caiu</span>`
-        : `<span class="trend-chip same">— igual</span>`;
+        : `<span class="trend-chip down">▼ caiu</span>`;
       const hasPals  = palpitesData.some(p=>p.usuario_id===r.usuario_id);
       const palCount = palpitesData.filter(p=>p.usuario_id===r.usuario_id).length;
       return `

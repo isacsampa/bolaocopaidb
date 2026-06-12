@@ -339,11 +339,11 @@ app.post("/api/palpites", async (req, res) => {
     return res.status(404).json({ error: "Jogo não encontrado." });
   }
 
-  // 3.5. Bloqueia palpite se o prazo limite global do bolão tiver expirado
+  // 3.5. Bloqueia palpite se o prazo limite global do bolão tiver expirado (exceto jogo 291)
   const globalDeadlineStr = process.env.GLOBAL_DEADLINE || "2026-06-11T16:00:00-03:00";
   const globalDeadline = new Date(globalDeadlineStr);
   const agora = new Date();
-  if (agora >= globalDeadline) {
+  if (agora >= globalDeadline && Number(jogo_id) !== 291) {
     return res.status(403).json({
       error: `Prazo encerrado. O prazo limite para todas as apostas expirou em ${globalDeadline.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}.`
     });
@@ -356,10 +356,10 @@ app.post("/api/palpites", async (req, res) => {
     });
   }
 
-  // 5. Bloqueia palpite se o horário atual for posterior ao início do jogo
+  // 5. Bloqueia palpite se o horário atual for posterior ao início do jogo (exceto jogo 291)
   const dataJogo = new Date(jogo.data_hora);
 
-  if (agora >= dataJogo) {
+  if (agora >= dataJogo && Number(jogo_id) !== 291) {
     return res.status(403).json({
       error: `Prazo encerrado. O jogo começou em ${dataJogo.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}.`,
     });

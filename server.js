@@ -356,10 +356,10 @@ app.post("/api/palpites", async (req, res) => {
     });
   }
 
-  // 5. Bloqueia palpite se o horário atual for posterior ao início do jogo (com exceção para o jogo 290)
+  // 5. Bloqueia palpite se o horário atual for posterior ao início do jogo
   const dataJogo = new Date(jogo.data_hora);
 
-  if (agora >= dataJogo && jogo.id !== 290) {
+  if (agora >= dataJogo) {
     return res.status(403).json({
       error: `Prazo encerrado. O jogo começou em ${dataJogo.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}.`,
     });

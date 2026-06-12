@@ -76,7 +76,7 @@
   --c-glass-border: rgba(17, 24, 39, 0.08);
   --c-input-bg: #f9fafb;
   --c-input-focus: rgba(0, 104, 71, 0.25);
-  --c-score-text: #006847; /* Verde Copa high contrast */
+  --c-score-text: var(--c-text); /* Preto no modo claro */
 }
 
 /* ── Reset & Base ─────────────────────────────────────────────────────────── */
@@ -952,11 +952,11 @@ body {
 }
 
 .group-score-input {
-  width: 40px;
-  height: 32px;
+  width: 44px;
+  height: 36px;
   text-align: center;
   font-family: var(--font-display);
-  font-size: 1.2rem;
+  font-size: 1.35rem;
   background: var(--c-surface);
   border: 1px solid var(--c-border2);
   border-radius: 4px;
@@ -1600,9 +1600,12 @@ body {
 
 .pontos-val {
   font-family: var(--font-display);
-  font-size: 1.35rem;
+  font-size: 1.50rem;
   letter-spacing: 0.04em;
   color: var(--c-gold);
+}
+[data-theme="light"] .pontos-val {
+  color: var(--c-text); /* Preto no modo claro */
 }
 .rank-1 .pontos-val { text-shadow: 0 0 16px rgba(245,200,66,0.5); }
 
@@ -2347,7 +2350,7 @@ body {
 }
 
 .summary-card__value {
-  font-size: 1.2rem;
+  font-size: 1.45rem;
   font-weight: 700;
   color: var(--c-text);
   font-family: var(--font-display);

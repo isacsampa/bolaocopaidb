@@ -340,7 +340,7 @@ app.post("/api/palpites", async (req, res) => {
   }
 
   // 3.5. Bloqueia palpite se o prazo limite global do bolão tiver expirado (exceto jogos liberados)
-  const exceptions = [291, 293, 294, 295];
+  const exceptions = [291, 293, 294, 295, 296];
   const globalDeadlineStr = process.env.GLOBAL_DEADLINE || "2026-06-11T16:00:00-03:00";
   const globalDeadline = new Date(globalDeadlineStr);
   const agora = new Date();

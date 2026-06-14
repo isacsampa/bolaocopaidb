@@ -340,7 +340,7 @@ app.post("/api/palpites", async (req, res) => {
   }
 
   // 3.5. Bloqueia palpite se o prazo limite global do bolão tiver expirado (exceto jogos liberados)
-  const exceptions = [291, 293, 294, 295, 296];
+  const exceptions = [291, 293, 294, 295, 296, 297];
   const globalDeadlineStr = process.env.GLOBAL_DEADLINE || "2026-06-11T16:00:00-03:00";
   const globalDeadline = new Date(globalDeadlineStr);
   const agora = new Date();
@@ -350,8 +350,8 @@ app.post("/api/palpites", async (req, res) => {
     });
   }
 
-  // 4. Bloqueia palpite se o jogo já tiver resultado registrado
-  if (jogo.gols_a !== null && jogo.gols_b !== null) {
+  // 4. Bloqueia palpite se o jogo já tiver resultado registrado (exceto se for uma exceção)
+  if (jogo.gols_a !== null && jogo.gols_b !== null && !exceptions.includes(Number(jogo_id))) {
     return res.status(403).json({
       error: "Este jogo já possui resultado final. Palpites encerrados.",
     });

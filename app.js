@@ -338,11 +338,11 @@ function getParticipantPhoto(nome) {
 }
  
 function getGameStatus(jogo) {
-  if (jogo.gols_a !== null && jogo.gols_b !== null) return "encerrado";
-  
-  // Exceção manual para liberar jogos (Coreia do Sul x República Tcheca, e jogos do dia 13)
-  const exceptions = [291, 293, 294, 295, 296];
+  // Exceção manual para liberar jogos
+  const exceptions = [291, 293, 294, 295, 296, 297];
   if (exceptions.includes(Number(jogo.id))) return "aberto";
+
+  if (jogo.gols_a !== null && jogo.gols_b !== null) return "encerrado";
   
   // Prazo limite global do bolão
   const deadlineStr = state.config?.global_deadline || "2026-06-11T16:00:00-03:00";

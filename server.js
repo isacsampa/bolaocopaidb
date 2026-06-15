@@ -286,7 +286,7 @@ app.get("/api/jogos", async (_req, res) => {
  */
 app.get("/api/config", (_req, res) => {
   return res.status(200).json({
-    global_deadline: process.env.GLOBAL_DEADLINE || "2026-06-11T16:00:00-03:00"
+    global_deadline: "2026-06-28T23:59:59-03:00"
   });
 });
 
@@ -341,7 +341,7 @@ app.post("/api/palpites", async (req, res) => {
 
   // 3.5. Bloqueia palpite se o prazo limite global do bolão tiver expirado (exceto jogos liberados)
   const exceptions = [291, 293, 294, 295, 296, 297];
-  const globalDeadlineStr = process.env.GLOBAL_DEADLINE || "2026-06-11T16:00:00-03:00";
+  const globalDeadlineStr = "2026-06-28T23:59:59-03:00";
   const globalDeadline = new Date(globalDeadlineStr);
   const agora = new Date();
   if (agora >= globalDeadline && !exceptions.includes(Number(jogo_id))) {

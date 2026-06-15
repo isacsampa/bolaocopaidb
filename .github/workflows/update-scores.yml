@@ -2,8 +2,8 @@ name: Atualizar Resultados do Bolão
 
 on:
   schedule:
-    # Roda a cada 2 horas (durante o período da copa)
-    - cron: '0 */2 * * *'
+    # Roda de 20 em 20 minutos (durante o período da copa)
+    - cron: '*/20 * * * *'
   workflow_dispatch:
     # Permite rodar manualmente pelo painel do GitHub se necessário
 

@@ -84,8 +84,8 @@
 
     /* Stats */
     .pub-stats {
-      display: grid; grid-template-columns: repeat(3,1fr);
-      gap: .75rem; max-width: 660px;
+      display: grid; grid-template-columns: repeat(5,1fr);
+      gap: .75rem; max-width: 820px;
       margin: 0 auto 2rem; padding: 0 1.25rem;
     }
     .pub-stat {
@@ -240,7 +240,7 @@
       .pub-sh__title small { display:inline; }
     }
     @media(max-width:600px){
-      .pub-stats { gap:.45rem;padding:0 .9rem;margin-bottom:1.5rem; }
+      .pub-stats { grid-template-columns: repeat(3,1fr); gap:.45rem;padding:0 .9rem;margin-bottom:1.5rem; }
       .pub-stat { padding:.7rem .5rem; }
       .pub-podium { gap:.35rem;margin-bottom:1.5rem; }
       .pub-table td { padding:.65rem .75rem; }
@@ -257,7 +257,7 @@
       .pub-footer { font-size:.7rem;padding:1rem .9rem 1.5rem; }
     }
     @media(max-width:420px){
-      .pub-stats { grid-template-columns:repeat(3,1fr);gap:.35rem;padding:0 .75rem; }
+      .pub-stats { grid-template-columns:repeat(2,1fr);gap:.35rem;padding:0 .75rem; }
       .pub-stat__lbl { font-size:.55rem;letter-spacing:.04em; }
       .palpites-grid { grid-template-columns:1fr 1fr;gap:.4rem; }
       .pub-table col.col-pts { width:64px; }
@@ -323,6 +323,14 @@
     <div class="pub-stat">
       <div class="pub-stat__val" id="s-avg">—</div>
       <div class="pub-stat__lbl">Média Geral</div>
+    </div>
+    <div class="pub-stat">
+      <div class="pub-stat__val" id="s-played">—</div>
+      <div class="pub-stat__lbl">Jogos Realizados</div>
+    </div>
+    <div class="pub-stat">
+      <div class="pub-stat__val" id="s-remaining">—</div>
+      <div class="pub-stat__lbl">Jogos Restantes</div>
     </div>
   </div>
 
@@ -501,25 +509,32 @@
 
   let rankingData  = [];
   let palpitesData = [];
+  let jogosData    = [];
   let openUserId   = null;
 
   async function refresh(isManual=false){
     const btn = document.getElementById("btn-ref");
     if(isManual) btn.classList.add("spin");
     try {
-      const [rRanking, rPalpites] = await Promise.all([
+      const [rRanking, rPalpites, rJogos] = await Promise.all([
         fetch(`${API_BASE}/ranking`),
         fetch(`${API_BASE}/palpites/publicos`),
+        fetch(`${API_BASE}/jogos`),
       ]);
       if(!rRanking.ok) throw new Error("ranking");
       rankingData  = await rRanking.json();
       palpitesData = rPalpites.ok ? await rPalpites.json() : [];
+      jogosData    = rJogos.ok ? await rJogos.json() : [];
     } catch(e) {
       try {
-        const rr = await fetch(`${API_BASE}/ranking`);
+        const [rr, rj] = await Promise.all([
+          fetch(`${API_BASE}/ranking`),
+          fetch(`${API_BASE}/jogos`),
+        ]);
         rankingData = rr.ok ? await rr.json() : [];
+        jogosData    = rj.ok ? await rj.json() : [];
         palpitesData = [];
-      } catch{ rankingData=[]; palpitesData=[]; }
+      } catch{ rankingData=[]; palpitesData=[]; jogosData=[]; }
     }
     btn.classList.remove("spin");
     render();
@@ -614,6 +629,12 @@
     document.getElementById("s-leader").textContent  = maxPts;
     const avg = rankingData.reduce((s,r)=>s+(r.pontos_totais??0),0)/rankingData.length;
     document.getElementById("s-avg").textContent     = avg.toFixed(1);
+
+    const played = Array.isArray(jogosData) ? jogosData.filter(j => j.gols_a !== null && j.gols_b !== null).length : 0;
+    const remaining = Array.isArray(jogosData) ? (jogosData.length - played) : 0;
+    document.getElementById("s-played").textContent = played;
+    document.getElementById("s-remaining").textContent = remaining;
+
     statsEl.style.display = "grid";
 
     const [p1,p2,p3] = rankingData;

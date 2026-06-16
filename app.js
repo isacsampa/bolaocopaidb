@@ -1596,7 +1596,6 @@ async function loadDashboard() {
   const rankEl = document.getElementById("dash-my-rank");
   const pointsEl = document.getElementById("dash-my-points");
   const playedEl = document.getElementById("dash-played-games");
-  const remainingEl = document.getElementById("dash-remaining-games");
   const betsEl = document.getElementById("dash-bets-made");
   const totalUsersEl = document.getElementById("dash-total-users");
   
@@ -1673,9 +1672,7 @@ async function loadDashboard() {
     // Calculate statistics
     let totalGames = state.jogos.length;
     let playedGames = state.jogos.filter(j => j.gols_a !== null && j.gols_b !== null).length;
-    let remainingGames = totalGames - playedGames;
-    if (playedEl) playedEl.textContent = playedGames;
-    remainingEl.textContent = remainingGames;
+    if (playedEl) playedEl.textContent = `${playedGames}/${totalGames}`;
     
     let betsMadeCount = 0;
     state.jogos.forEach(j => {

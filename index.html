@@ -667,27 +667,26 @@
     document.getElementById("pod-time").textContent = "Atualizado às " + ftime(new Date());
     podSec.hidden = false;
 
+    let history = {};
+    try {
+      const stored = localStorage.getItem("bolao-ranking-history");
+      if (stored) history = JSON.parse(stored);
+    } catch(e) {}
+
     document.getElementById("total-pill").textContent = rankingData.length + " participantes";
     const rowsHtml = rankingData.map((r,i)=>{
       const init   = r.nome.slice(0,2).toUpperCase();
       const bdgCls = i===0?"g":i===1?"s":i===2?"b":"";
       const grad   = avGrad(r.nome);
       const uid    = r.usuario_id||r.nome;
-      let trendHtml = "";
-      if ((r.pontos_totais??0) === 0) {
-        trendHtml = `<span class="trend-chip same">▬ manteve</span>`;
-      } else if (i === 0) {
-        const tN = (uid.charCodeAt(0) + (uid.charCodeAt(uid.length - 1) || 0)) % 2;
-        trendHtml = tN === 0
-          ? `<span class="trend-chip up">▲ subiu</span>`
-          : `<span class="trend-chip same">▬ manteve</span>`;
-      } else {
-        const tN = (uid.charCodeAt(0) + (uid.charCodeAt(uid.length - 1) || 0)) % 3;
-        trendHtml = tN === 0
-          ? `<span class="trend-chip up">▲ subiu</span>`
-          : tN === 1
-            ? `<span class="trend-chip down">▼ caiu</span>`
-            : `<span class="trend-chip same">▬ manteve</span>`;
+      let trendHtml = `<span class="trend-chip same">▬ manteve</span>`;
+      if (history && history[uid] !== undefined) {
+        const prevIdx = history[uid];
+        if (prevIdx > i) {
+          trendHtml = `<span class="trend-chip up">▲ subiu</span>`;
+        } else if (prevIdx < i) {
+          trendHtml = `<span class="trend-chip down">▼ caiu</span>`;
+        }
       }
       const hasPals  = palpitesData.some(p=>p.usuario_id===r.usuario_id);
       const palCount = palpitesData.filter(p=>p.usuario_id===r.usuario_id).length;
@@ -732,6 +731,16 @@
     tbody.innerHTML = rowsHtml;
     document.getElementById("last-update-lbl").textContent = "Última atualização: " + ftime(new Date());
     tableSec.hidden = false;
+
+    // Save current positions to history in localStorage
+    try {
+      const nextHistory = {};
+      rankingData.forEach((r, idx) => {
+        const uid = r.usuario_id || r.nome;
+        nextHistory[uid] = idx;
+      });
+      localStorage.setItem("bolao-ranking-history", JSON.stringify(nextHistory));
+    } catch(e) {}
 
     tbody.querySelectorAll(".ranking-row").forEach(row => {
       row.addEventListener("click", () => {

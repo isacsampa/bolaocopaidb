@@ -99,8 +99,8 @@ async function updateScores() {
   try {
     console.log("🔄 Buscando partidas reais da API do Football-Data...");
 
-    // Busca os dados da Copa do Mundo (WC) na API
-    const response = await fetch("https://api.football-data.org/v4/competitions/WC/matches", {
+    // Busca as partidas na API
+    const response = await fetch("https://api.football-data.org/v4/matches", {
       headers: { "X-Auth-Token": apiKey }
     });
 
@@ -126,6 +126,11 @@ async function updateScores() {
     let updatedCount = 0;
 
     for (const match of matches) {
+      // Filtrar para garantir que seja partida da Copa do Mundo (WC)
+      if (match.competition && match.competition.code !== "WC") {
+        continue;
+      }
+
       // Só nos interessam jogos que já terminaram (FINISHED) ou estão acontecendo (IN_PLAY)
       if (match.status !== "FINISHED" && match.status !== "IN_PLAY") {
         continue;

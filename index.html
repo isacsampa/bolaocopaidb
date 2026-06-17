@@ -673,10 +673,22 @@
       const bdgCls = i===0?"g":i===1?"s":i===2?"b":"";
       const grad   = avGrad(r.nome);
       const uid    = r.usuario_id||r.nome;
-      const tN     = (uid.charCodeAt(0)+(uid.charCodeAt(uid.length-1)||0))%2;
-      const trendHtml = tN===0
-        ? `<span class="trend-chip up">▲ subiu</span>`
-        : `<span class="trend-chip down">▼ caiu</span>`;
+      let trendHtml = "";
+      if ((r.pontos_totais??0) === 0) {
+        trendHtml = `<span class="trend-chip same">▬ manteve</span>`;
+      } else if (i === 0) {
+        const tN = (uid.charCodeAt(0) + (uid.charCodeAt(uid.length - 1) || 0)) % 2;
+        trendHtml = tN === 0
+          ? `<span class="trend-chip up">▲ subiu</span>`
+          : `<span class="trend-chip same">▬ manteve</span>`;
+      } else {
+        const tN = (uid.charCodeAt(0) + (uid.charCodeAt(uid.length - 1) || 0)) % 3;
+        trendHtml = tN === 0
+          ? `<span class="trend-chip up">▲ subiu</span>`
+          : tN === 1
+            ? `<span class="trend-chip down">▼ caiu</span>`
+            : `<span class="trend-chip same">▬ manteve</span>`;
+      }
       const hasPals  = palpitesData.some(p=>p.usuario_id===r.usuario_id);
       const palCount = palpitesData.filter(p=>p.usuario_id===r.usuario_id).length;
       

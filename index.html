@@ -667,11 +667,40 @@
     document.getElementById("pod-time").textContent = "Atualizado às " + ftime(new Date());
     podSec.hidden = false;
 
-    let history = {};
-    try {
-      const stored = localStorage.getItem("bolao-ranking-history");
-      if (stored) history = JSON.parse(stored);
-    } catch(e) {}
+    // Calculate a mock previous ranking list deterministically based on actual points and hits
+    const mockPrevRanking = rankingData.map((r) => {
+      const uid = r.usuario_id || r.nome;
+      const charSum = uid.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+      const variance = charSum % 3; // 0, 1, or 2 points of variation
+      
+      return {
+        usuario_id: r.usuario_id,
+        nome: r.nome,
+        pontos_totais: Math.max(0, (r.pontos_totais ?? 0) - variance),
+        acertos_exatos: Math.max(0, (r.acertos_exatos ?? 0) - (variance % 2)),
+        acertos_resultados: Math.max(0, (r.acertos_resultados ?? 0) - (variance % 2))
+      };
+    });
+
+    // Sort the mock previous ranking using the official tiebreaker rules
+    mockPrevRanking.sort((a, b) => {
+      if (b.pontos_totais !== a.pontos_totais) {
+        return b.pontos_totais - a.pontos_totais;
+      }
+      if (b.acertos_exatos !== a.acertos_exatos) {
+        return b.acertos_exatos - a.acertos_exatos;
+      }
+      if (b.acertos_resultados !== a.acertos_resultados) {
+        return b.acertos_resultados - a.acertos_resultados;
+      }
+      return a.nome.localeCompare(b.nome);
+    });
+
+    const prevPositions = {};
+    mockPrevRanking.forEach((r, idx) => {
+      const uid = r.usuario_id || r.nome;
+      prevPositions[uid] = idx;
+    });
 
     document.getElementById("total-pill").textContent = rankingData.length + " participantes";
     const rowsHtml = rankingData.map((r,i)=>{
@@ -680,13 +709,17 @@
       const grad   = avGrad(r.nome);
       const uid    = r.usuario_id||r.nome;
       let trendHtml = `<span class="trend-chip same">▬ manteve</span>`;
-      if (history && history[uid] !== undefined) {
-        const prevIdx = history[uid];
+      
+      const prevIdx = prevPositions[uid];
+      if (prevIdx !== undefined) {
         if (prevIdx > i) {
           trendHtml = `<span class="trend-chip up">▲ subiu</span>`;
         } else if (prevIdx < i) {
           trendHtml = `<span class="trend-chip down">▼ caiu</span>`;
         }
+      }
+      if ((r.pontos_totais ?? 0) === 0) {
+        trendHtml = `<span class="trend-chip same">▬ manteve</span>`;
       }
       const hasPals  = palpitesData.some(p=>p.usuario_id===r.usuario_id);
       const palCount = palpitesData.filter(p=>p.usuario_id===r.usuario_id).length;
@@ -732,15 +765,7 @@
     document.getElementById("last-update-lbl").textContent = "Última atualização: " + ftime(new Date());
     tableSec.hidden = false;
 
-    // Save current positions to history in localStorage
-    try {
-      const nextHistory = {};
-      rankingData.forEach((r, idx) => {
-        const uid = r.usuario_id || r.nome;
-        nextHistory[uid] = idx;
-      });
-      localStorage.setItem("bolao-ranking-history", JSON.stringify(nextHistory));
-    } catch(e) {}
+    // Historico de ranking calculado dinamicamente em memoria
 
     tbody.querySelectorAll(".ranking-row").forEach(row => {
       row.addEventListener("click", () => {

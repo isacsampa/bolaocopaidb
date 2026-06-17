@@ -183,4 +183,8 @@ async function updateScores() {
   }
 }
 
-updateScores();
+if (require.main === module) {
+  updateScores();
+}
+
+module.exports = { updateScores };

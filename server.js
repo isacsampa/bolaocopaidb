@@ -577,3 +577,13 @@ app.listen(PORT, () => {
   console.log(`\n🏆 Bolão Copa 2026 — Backend rodando em http://localhost:${PORT}`);
   console.log(`📡 Supabase conectado: ${process.env.SUPABASE_URL}\n`);
 });
+
+// ─── Agendador de Resultados (Opção 1: rodar a cada 60s no servidor) ───────────
+const { updateScores } = require("./scripts/update_results.js");
+
+// Roda a primeira vez após 10 segundos para dar tempo do servidor estabilizar
+setTimeout(() => {
+  console.log("⏳ Iniciando sincronização automática de resultados (a cada 60s)...");
+  updateScores();
+  setInterval(updateScores, 60_000);
+}, 10_000);

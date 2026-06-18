@@ -121,6 +121,11 @@ body {
   z-index: -1;
   overflow: hidden;
   background: radial-gradient(circle at 50% 50%, #0d1527 0%, #050811 100%);
+  transition: background 0.3s ease;
+}
+
+[data-theme="light"] .auth-bg {
+  background: radial-gradient(circle at 50% 50%, #f9fafb 0%, #ebf0f5 100%);
 }
 
 .auth-bg__orb {
@@ -130,6 +135,12 @@ body {
   opacity: 0.22;
   mix-blend-mode: screen;
   animation: float-orb 20s infinite alternate ease-in-out;
+  transition: opacity 0.3s ease;
+}
+
+[data-theme="light"] .auth-bg__orb {
+  mix-blend-mode: multiply;
+  opacity: 0.08;
 }
 
 .orb1 {
@@ -146,7 +157,7 @@ body {
   right: -10%;
   width: 65vw;
   height: 65vw;
-  background: radial-gradient(circle, var(--c-red) 0%, rgba(200, 16, 46, 0) 70%);
+  background: radial-gradient(circle, var(--c-red) 0%, rgba(224, 30, 55, 0) 70%);
   animation-duration: 28s;
 }
 
@@ -172,6 +183,13 @@ body {
   background-position: center;
   mask-image: radial-gradient(circle at center, black 40%, transparent 90%);
   -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 90%);
+  transition: background-image 0.3s ease;
+}
+
+[data-theme="light"] .auth-bg__grid {
+  background-image: 
+    linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
 }
 
 @keyframes float-orb {

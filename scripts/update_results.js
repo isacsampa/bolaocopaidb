@@ -21,17 +21,18 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY; // Service Role Key
 const apiKey = process.env.FOOTBALL_DATA_API_KEY;
 
-if (!supabaseUrl || !supabaseKey) {
-  console.error("❌ Erro: SUPABASE_URL e SUPABASE_KEY precisam estar configurados no .env");
-  process.exit(1);
+if (require.main === module) {
+  if (!supabaseUrl || !supabaseKey) {
+    console.error("❌ Erro: SUPABASE_URL e SUPABASE_KEY precisam estar configurados no .env");
+    process.exit(1);
+  }
+  if (!apiKey) {
+    console.warn("⚠️ Aviso: FOOTBALL_DATA_API_KEY não configurada no .env. O script não rodará.");
+    process.exit(0);
+  }
 }
 
-if (!apiKey) {
-  console.warn("⚠️ Aviso: FOOTBALL_DATA_API_KEY não configurada no .env. O script não rodará.");
-  process.exit(0);
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null;
 
 // Dicionário de tradução de nomes de países (API em Inglês -> Banco de Dados em Português)
 const TEAM_TRANSLATIONS = {
@@ -119,6 +120,14 @@ function fetchJSON(url, token) {
 }
 
 async function updateScores() {
+  if (!supabase) {
+    console.error("❌ Sincronização cancelada: Cliente Supabase não inicializado (verifique SUPABASE_URL e SUPABASE_KEY).");
+    return;
+  }
+  if (!apiKey) {
+    console.warn("⚠️ Sincronização ignorada: FOOTBALL_DATA_API_KEY não configurada.");
+    return;
+  }
   try {
     console.log("🔄 Buscando partidas reais da API do Football-Data (Copa do Mundo)...");
 

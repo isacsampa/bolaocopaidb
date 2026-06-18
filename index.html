@@ -98,6 +98,39 @@
     [data-theme="light"] .pub-stat__val { color: var(--c-text); }
     .pub-stat__lbl { font-size:clamp(.58rem,2vw,.68rem);color:var(--c-text-2);text-transform:uppercase;letter-spacing:.06em;margin-top:.3rem;font-weight:600; }
 
+    /* Progress bar for games count */
+    .pub-stat-progress-container {
+      position: relative;
+      width: 78%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      margin: 0.55rem auto 0.1rem;
+      display: flex;
+      align-items: center;
+    }
+    [data-theme="light"] .pub-stat-progress-container {
+      background: rgba(0, 0, 0, 0.06);
+    }
+    .pub-stat-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #009a6a 0%, var(--c-gold) 100%);
+      border-radius: 999px;
+      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      width: 0%;
+    }
+    .pub-stat-progress-money {
+      position: absolute;
+      right: -13px;
+      font-size: 0.95rem;
+      animation: pulse-money 2s infinite ease-in-out;
+      line-height: 1;
+    }
+    @keyframes pulse-money {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.22); filter: drop-shadow(0 0 5px rgba(255, 204, 41, 0.5)); }
+    }
+
     /* Content wrapper */
     .pub-wrap { max-width:920px;margin:0 auto;padding:0 1rem 4rem;width:100%; }
 
@@ -327,6 +360,10 @@
     <div class="pub-stat">
       <div class="pub-stat__val" id="s-matches">—</div>
       <div class="pub-stat__lbl">Jogos Realizados</div>
+      <div class="pub-stat-progress-container">
+        <div class="pub-stat-progress-fill" id="s-matches-progress"></div>
+        <span class="pub-stat-progress-money" title="Saco de dinheiro com o prêmio acumulado!">💰</span>
+      </div>
     </div>
   </div>
 
@@ -629,6 +666,15 @@
     const played = Array.isArray(jogosData) ? jogosData.filter(j => j.gols_a !== null && j.gols_b !== null).length : 0;
     const total = Array.isArray(jogosData) ? jogosData.length : 72;
     document.getElementById("s-matches").textContent = `${played}/${total}`;
+
+    // Update progress bar width dynamically
+    const pct = total > 0 ? (played / total) * 100 : 0;
+    const progressFill = document.getElementById("s-matches-progress");
+    if (progressFill) {
+      setTimeout(() => {
+        progressFill.style.width = `${pct}%`;
+      }, 100);
+    }
 
     statsEl.style.display = "grid";
 

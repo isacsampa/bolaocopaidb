@@ -1673,6 +1673,15 @@ async function loadDashboard() {
     let totalGames = state.jogos.length;
     let playedGames = state.jogos.filter(j => j.gols_a !== null && j.gols_b !== null).length;
     if (playedEl) playedEl.textContent = `${playedGames}/${totalGames}`;
+
+    // Update dashboard progress bar fill
+    const dashPct = totalGames > 0 ? (playedGames / totalGames) * 100 : 0;
+    const dashProgressFill = document.getElementById("dash-played-progress");
+    if (dashProgressFill) {
+      setTimeout(() => {
+        dashProgressFill.style.width = `${dashPct}%`;
+      }, 100);
+    }
     
     let betsMadeCount = 0;
     state.jogos.forEach(j => {

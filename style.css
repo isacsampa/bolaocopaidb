@@ -3045,3 +3045,32 @@ body {
   bottom: -5px;
   right: -5px;
 }
+
+/* Dashboard Progress Bar for Jogos Realizados */
+.dash-progress-container {
+  position: relative;
+  width: 90%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+[data-theme="light"] .dash-progress-container {
+  background: rgba(0, 0, 0, 0.06);
+}
+.dash-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #009a6a 0%, var(--c-gold) 100%);
+  border-radius: 999px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 0%;
+}
+.dash-progress-money {
+  position: absolute;
+  right: -13px;
+  font-size: 0.95rem;
+  animation: pulse-money 2s infinite ease-in-out;
+  line-height: 1;
+}

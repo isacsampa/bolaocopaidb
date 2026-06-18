@@ -14,6 +14,7 @@
 
 require("dotenv").config();
 const { createClient } = require("@supabase/supabase-js");
+const https = require("https");
 
 // Validação de variáveis de ambiente
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -95,20 +96,34 @@ function translateTeam(name) {
   return TEAM_TRANSLATIONS[name] || name;
 }
 
+function fetchJSON(url, token) {
+  return new Promise((resolve, reject) => {
+    const options = {
+      headers: { "X-Auth-Token": token }
+    };
+    https.get(url, options, (res) => {
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        return reject(new Error(`Erro na API externa: ${res.statusCode}`));
+      }
+      let data = "";
+      res.on("data", chunk => data += chunk);
+      res.on("end", () => {
+        try {
+          resolve(JSON.parse(data));
+        } catch (e) {
+          reject(e);
+        }
+      });
+    }).on("error", reject);
+  });
+}
+
 async function updateScores() {
   try {
     console.log("🔄 Buscando partidas reais da API do Football-Data (Copa do Mundo)...");
 
-    // Busca todas as partidas da Copa do Mundo (WC) na API
-    const response = await fetch("https://api.football-data.org/v4/competitions/WC/matches", {
-      headers: { "X-Auth-Token": apiKey }
-    });
-
-    if (!response.ok) {
-      throw new Error(`Erro na API externa: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
+    // Busca todas as partidas da Copa do Mundo (WC) na API usando módulo nativo https
+    const data = await fetchJSON("https://api.football-data.org/v4/competitions/WC/matches", apiKey);
     const matches = data.matches || [];
     console.log(`✅ ${matches.length} partidas encontradas na API.`);
 

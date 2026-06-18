@@ -136,12 +136,19 @@
 
     /* Section head */
     .pub-sh {
-      display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;
-      margin-bottom:1rem;padding-bottom:.65rem; border-bottom:1px solid var(--c-border);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .4rem;
+      margin-bottom: 1.5rem; padding-bottom: .75rem; border-bottom: 1px solid var(--c-border);
+      text-align: center;
     }
-    .pub-sh__title { font-family:var(--font-display);font-size:clamp(.9rem,3vw,1.05rem);font-weight:700;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap; }
-    .pub-sh__title small { display:none; }
-    .pub-sh__pill { font-size:.72rem;color:var(--c-text-3);background:var(--c-surface2);padding:.18rem .6rem;border-radius:999px;white-space:nowrap; }
+    .pub-sh__title { 
+      font-family: var(--font-display); 
+      font-size: clamp(1rem, 3.5vw, 1.25rem); 
+      font-weight: 800; 
+      display: flex; align-items: center; justify-content: center; gap: .4rem; flex-wrap: wrap; 
+      color: var(--c-text);
+    }
+    .pub-sh__title small { display: none; }
+    .pub-sh__pill { font-size: .72rem; color: var(--c-text-3); background: var(--c-surface2); padding: .18rem .6rem; border-radius: 999px; white-space: nowrap; }
 
     /* Podium */
     .pub-podium { display:flex;align-items:flex-end;justify-content:center;gap:.6rem;max-width:460px;margin:0 auto 2rem;padding:0 .75rem; }

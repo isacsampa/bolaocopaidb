@@ -235,6 +235,8 @@ async function fetchAndNormalizeJogos() {
   const nameMap = {
     "república da coreia": "Coreia do Sul",
     "coreia do sul": "Coreia do Sul",
+    "república tcheca": "Tchéquia",
+    "tchéquia": "Tchéquia",
     "curaçau": "Curaçao",
     "rep. democrática do congo": "República Democrática do Congo",
     "república democrática do congo": "República Democrática do Congo"

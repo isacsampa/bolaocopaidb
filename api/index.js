@@ -565,8 +565,15 @@ app.get("/api/health", (_req, res) => {
 // ─── Rota para atualização manual/cron dos resultados ─────────────────────────
 app.get("/api/cron/update", async (req, res) => {
   const authHeader = req.headers.authorization;
-  // Permite chamada local sem token ou se CRON_SECRET coincidir
-  if (process.env.VERCEL && process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const querySecret = req.query.secret;
+
+  // Permite se o token vier no Header (como o Vercel Cron envia) OU como parâmetro na URL (?secret=...)
+  const isAuthorized = !process.env.VERCEL || 
+                       !process.env.CRON_SECRET || 
+                       (authHeader === `Bearer ${process.env.CRON_SECRET}`) ||
+                       (querySecret === process.env.CRON_SECRET);
+
+  if (!isAuthorized) {
     return res.status(401).json({ error: "Não autorizado." });
   }
 

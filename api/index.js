@@ -9,6 +9,7 @@
  */
 
 require("dotenv").config();
+const path = require("path");
 const express = require("express");
 const cors = require("cors");
 const { createClient } = require("@supabase/supabase-js");
@@ -36,7 +37,7 @@ app.use(cors({ origin: "*" })); // Em produção, restrinja ao domínio do front
 app.use(express.json());
 
 // Servir arquivos estáticos do frontend (permite deploy unificado frontend + backend)
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, "..")));
 
 // Middleware de log de requisições
 app.use((req, _res, next) => {
@@ -561,6 +562,25 @@ app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
+// ─── Rota para atualização manual/cron dos resultados ─────────────────────────
+app.get("/api/cron/update", async (req, res) => {
+  const authHeader = req.headers.authorization;
+  // Permite chamada local sem token ou se CRON_SECRET coincidir
+  if (process.env.VERCEL && process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return res.status(401).json({ error: "Não autorizado." });
+  }
+
+  try {
+    console.log("⏰ Executando atualização de resultados via Cron...");
+    const { updateScores } = require("../scripts/update_results.js");
+    await updateScores();
+    return res.json({ success: true, message: "Resultados atualizados com sucesso." });
+  } catch (err) {
+    console.error("Erro no cron de atualização:", err);
+    return res.status(500).json({ error: "Erro ao atualizar resultados." });
+  }
+});
+
 // ─── 404 Handler ───────────────────────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({ error: `Rota ${req.method} ${req.path} não existe.` });
@@ -573,17 +593,21 @@ app.use((err, _req, res, _next) => {
 });
 
 // ─── Start ─────────────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`\n🏆 Bolão Copa 2026 — Backend rodando em http://localhost:${PORT}`);
-  console.log(`📡 Supabase conectado: ${process.env.SUPABASE_URL}\n`);
-});
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`\n🏆 Bolão Copa 2026 — Backend rodando em http://localhost:${PORT}`);
+    console.log(`📡 Supabase conectado: ${process.env.SUPABASE_URL}\n`);
+  });
 
-// ─── Agendador de Resultados (Opção 1: rodar a cada 60s no servidor) ───────────
-const { updateScores } = require("./scripts/update_results.js");
+  // ─── Agendador de Resultados (Opção 1: rodar a cada 60s no servidor) ───────────
+  const { updateScores } = require("../scripts/update_results.js");
 
-// Roda a primeira vez após 10 segundos para dar tempo do servidor estabilizar
-setTimeout(() => {
-  console.log("⏳ Iniciando sincronização automática de resultados (a cada 60s)...");
-  updateScores();
-  setInterval(updateScores, 60_000);
-}, 10_000);
+  // Roda a primeira vez após 10 segundos para dar tempo do servidor estabilizar
+  setTimeout(() => {
+    console.log("⏳ Iniciando sincronização automática de resultados (a cada 60s)...");
+    updateScores();
+    setInterval(updateScores, 60_000);
+  }, 10_000);
+}
+
+module.exports = app;
